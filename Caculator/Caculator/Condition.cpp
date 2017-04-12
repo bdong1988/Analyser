@@ -25,6 +25,11 @@ void CCondition::SetRange(DWORD dwLow, DWORD dwHigh)
 	m_range.low = dwLow;
 }
 
+void CCondition::SetFixedContent(DWORD dwContent)
+{
+	m_dwFixedContent = dwContent;
+}
+
 void CCondition::AddContent(const wstring& strName, DWORD dwContent)
 {
 	m_contentMap[strName] = dwContent;

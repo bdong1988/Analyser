@@ -20,12 +20,14 @@ public:
 	void SetName(const wstring& strName);
 	void SetAverage(DWORD dwAverage);
 	void SetRange(DWORD dwLow, DWORD dwHigh);
+	void SetFixedContent(DWORD dwContent);
 	void AddContent(const wstring& strName, DWORD dwContent);
 
 private:
 	wstring m_strCondtionName;
 	range m_range;
 	contentMap m_contentMap;
+	DWORD m_dwFixedContent = 0;
 	DWORD m_dwAverage = 0;
 	int m_dwGroupIndex = -1;
 };

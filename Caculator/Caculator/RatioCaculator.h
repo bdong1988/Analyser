@@ -10,9 +10,7 @@ using RatioList = vector<vector<unsigned long>>;
 class CRatioCaculator
 {
 public:
-	CRatioCaculator(unsigned long ulElementNum, unsigned long ulMax)
-		:m_ulElementNum(ulElementNum),
-		m_ulMax(ulMax)
+	CRatioCaculator()
 	{
 
 	}
@@ -21,66 +19,112 @@ public:
 
 	}
 
-	RatioList& GetRatioList() { return m_ratioList; }
-
-	void CaculateInternal(unsigned long ulLow, unsigned long ulHigh, unsigned long ulWaitingElemCount, unsigned long ulTotalElemCount, int nCurrentRatioIndex, RatioList& ratioList)
+	void Caculater_3(unsigned long ulMax, RatioList& ratioList)
 	{
-		for (unsigned long i = ulLow; i < ulHigh; i++)
+		unsigned long maxRatio = ulMax - 2;
+		unsigned long ulCountA = 0;
+		unsigned long ulCountB = 0;
+		unsigned long ulCountC = 0;
+
+		for (unsigned long i = 1; i <= maxRatio; i++)
 		{
-			if (0 == i - ulLow)
+			ulCountA = i;
+			for (unsigned long j = 1; j <= maxRatio; j++)
 			{
-				continue;
-			}
+				ulCountB = j;
+				if (ulCountA + ulCountB >= ulMax)
+				{
+					break;
+				}
 
-			if (1 != ulWaitingElemCount && i - ulLow != 1)
+				ulCountC = ulMax - i - j;
+				ratioList.push_back({ ulCountA , ulCountB , ulCountC });
+			}		
+		}
+	}
+
+	void Caculater_4(unsigned long ulMax, RatioList& ratioList)
+	{
+		unsigned long maxRatio = ulMax - 3;
+		unsigned long ulCountA = 0;
+		unsigned long ulCountB = 0;
+		unsigned long ulCountC = 0;
+		unsigned long ulCountD = 0;
+
+		for (unsigned long i = 1; i <= maxRatio; i++)
+		{
+			ulCountA = i;
+			for (unsigned long j = 1; j <= maxRatio; j++)
 			{
-				ratioList.push_back(vector<unsigned long>(ulTotalElemCount));
-			}
-
-			nCurrentRatioIndex = ratioList.size() - 1;
-
-			if (1 == ulWaitingElemCount)
-			{
-				ratioList[nCurrentRatioIndex][ulTotalElemCount - ulWaitingElemCount] = ulHigh - ulLow;
-				return;
-			}
-			else
-			{
-				ratioList[nCurrentRatioIndex][ulTotalElemCount - ulWaitingElemCount] = i - ulLow;
-			}
-
-
-			if (1 != ulWaitingElemCount)
-			{
-				unsigned long ulNewLow = GetNewLowBound(ratioList[nCurrentRatioIndex]);
-				CaculateInternal(ulNewLow, ulHigh, ulWaitingElemCount - 1, ulTotalElemCount, nCurrentRatioIndex, ratioList);
+				ulCountB = j;
+				for (unsigned long k = 1; k <= maxRatio; k++)
+				{
+					ulCountC = k;
+					if (ulCountA + ulCountB + ulCountC >= ulMax)
+					{
+						break;
+					}
+					ulCountD = ulMax - i - j - k;
+					ratioList.push_back({ ulCountA , ulCountB , ulCountC, ulCountD });
+				}			
 			}
 		}
 	}
 
-	unsigned long GetNewLowBound(const vector<unsigned long>& ratios)
+	void Caculater_5(unsigned long ulMax, RatioList& ratioList)
 	{
-		unsigned long ulNewLowBound = 0;
-		for (unsigned long ulRatio : ratios)
+		unsigned long maxRatio = ulMax - 3;
+		unsigned long ulCountA = 0;
+		unsigned long ulCountB = 0;
+		unsigned long ulCountC = 0;
+		unsigned long ulCountD = 0;
+		unsigned long ulCountE = 0;
+
+		for (unsigned long i = 1; i <= maxRatio; i++)
 		{
-			ulNewLowBound += ulRatio;
+			ulCountA = i;
+			for (unsigned long j = 1; j <= maxRatio; j++)
+			{
+				ulCountB = j;
+				for (unsigned long k = 1; k <= maxRatio; k++)
+				{
+					ulCountC = k;
+					for (unsigned long l = 1; l <= maxRatio; l++)
+					{
+						ulCountD = l;
+						if (ulCountA + ulCountB + ulCountC + ulCountD >= ulMax)
+						{
+							break;
+						}
+						ulCountE = ulMax - i - j - k - l;
+						m_ullDataCount++;
+					}
+
+				}
+			}
 		}
-
-		return ulNewLowBound;
 	}
 
-	void Caculator()
+	void Caculate(unsigned long ulElementCount, unsigned long ulCount)
 	{
-		m_ratioList.clear();
-		int nCurrentRatio = -1;
-		m_ratioList.push_back(vector<unsigned long>(m_ulElementNum));
-		CaculateInternal(0, m_ulMax, m_ulElementNum, m_ulElementNum, nCurrentRatio, m_ratioList);
+		switch (ulElementCount)
+		{
+		case 3:
+			Caculater_3(ulCount, m_ratioList);
+			break;
+		case 4:
+			Caculater_4(ulCount, m_ratioList);
+			break;
+		case 5:
+			Caculater_5(ulCount, m_ratioList);
+			break;
+		default:
+			break;
+		}
 	}
-
 
 private:
-	unsigned long m_ulElementNum = 0;
-	unsigned long m_ulMax = 1000;
 	RatioList m_ratioList;
+	unsigned long long m_ullDataCount = 0;
 };
 

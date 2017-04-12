@@ -17,6 +17,8 @@ public:
 
 	void ParseRange(const wstring& strRange, DWORD& dwLow, DWORD& dwHigh);
 
+	void Analyze();
+
 private:
 	groupList m_groupList;
 };

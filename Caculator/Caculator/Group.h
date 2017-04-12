@@ -25,6 +25,7 @@ public:
 	~CGroup();
 
 	void SetTotalScore(DWORD dwScore);
+	void AddCondition(const CConditionPtr& pConditon);
 private:
 	DWORD m_dwTotalScore = 0;
 	conditionList m_condtionList;

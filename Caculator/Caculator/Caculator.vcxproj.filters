@@ -63,6 +63,12 @@
     <ClInclude Include="Group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RatioCaculator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Caculator.cpp">
