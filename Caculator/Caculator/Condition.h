@@ -1,14 +1,29 @@
 #pragma once
 
-const static DWORD FACTOR = 1000;
+const static unsigned long FACTOR = 1000;
 
 struct range
 {
-	DWORD low = 0;
-	DWORD high = 0;
+	unsigned long low = 0;
+	unsigned long high = 0;
 };
 
-using contentMap = map<wstring, DWORD>;
+struct element
+{
+	element(const wstring& strName, unsigned long ulContent, bool bFixed)
+		:name(strName),
+		content(ulContent),
+		fixed(bFixed)
+	{
+
+	}
+	wstring name;
+	unsigned long content = 0;
+	bool fixed = false;
+};
+
+using contentMap = map<wstring, element>;
+
 
 class CCondition
 {
@@ -18,17 +33,17 @@ public:
 
 
 	void SetName(const wstring& strName);
-	void SetAverage(DWORD dwAverage);
-	void SetRange(DWORD dwLow, DWORD dwHigh);
-	void SetFixedContent(DWORD dwContent);
-	void AddContent(const wstring& strName, DWORD dwContent);
+	void SetAverage(unsigned long dwAverage);
+	void SetRange(unsigned long dwLow, unsigned long dwHigh);
+	void AddContent(const wstring& strElementName, unsigned long dwContent, bool bFixed);
+	unsigned long GetD() { return m_ulAverage; }
 
+	double CalculateE(unsigned long ulGroupTotalScore, unsigned long ulSumD, int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList);
 private:
 	wstring m_strCondtionName;
 	range m_range;
 	contentMap m_contentMap;
-	DWORD m_dwFixedContent = 0;
-	DWORD m_dwAverage = 0;
+	unsigned long m_ulAverage = 0;
 	int m_dwGroupIndex = -1;
 };
 

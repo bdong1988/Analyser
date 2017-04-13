@@ -188,4 +188,6 @@ void CCaculatorDlg::OnBnClickedBtnCaculate()
 	HRESULT hr = reader.ReadFile(strFilePath.GetBuffer());
 	CAnalyzer analyzer;
 	analyzer.InitilizeData(reader.GetRawContents());
+
+	
 }
