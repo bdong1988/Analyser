@@ -1,26 +1,21 @@
 #include "stdafx.h"
 #include "Analyzer.h"
 #include "Utility.h"
+#include "Combination.h"
+#include "spliter.h"
 
 static const wstring CONDITION = L"condition";
 static const wstring RANGE = L"range";
 static const wstring AVERAGE = L"average";
-static const wstring FIXEDSOURCE = L"fixed";
-
-static const set<wstring> OILList = {
-	L"ºËÌÒÓÍ",
-	L"×ØéµÓÍ",
-	L"ÑÇÂé×ÑÓÍ ",
-	L"´ó¶¹ÓÍ",
-	L"²Ë×ÑÓÍ",
-	L"¿û»¨×ÑÓÍ",
-	L"ÓñÃ×ÓÍ"
-};
 
 CAnalyzer::CAnalyzer()
 {
 	m_groupList.resize(GROUPINFO.size());
-}
+	for (unsigned long i = 0; i < GROUPINFO.size(); i++)
+	{
+		m_groupList[i].SetTotalScore(GROUPINFO[i].lfScore);
+	}
+}	
 
 
 CAnalyzer::~CAnalyzer()
@@ -32,56 +27,65 @@ void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 	unsigned long dwRowCount = rawDataArray.size();
 	for (unsigned long i = 0; i < dwRowCount; i++)
 	{
-		if (0 == i)
-		{
-			continue;
-		}
-
-		CConditionPtr pCondition = std::make_shared<CCondition>();
-
-		unsigned long dwColCount = rawDataArray[i].size();
 		BOOL bAddCondition = FALSE;
 
-		for (unsigned long j = 0; j < dwColCount; j++)
-		{	
-			if (rawDataArray[i][j].empty())
-			{
-				continue;
-			}
+		CConditionPtr pCondition = std::make_shared<CCondition>();
+		unsigned long dwColCount = rawDataArray[i].size();
 
-			
-			if (rawDataArray[0][j] == CONDITION)
+		if (0 == i)
+		{
+			for (unsigned long j = 0; j < dwColCount; j++)
 			{
-				bAddCondition = TRUE;
-				pCondition->SetName(rawDataArray[i][j]);
-			}
-			else if (rawDataArray[0][j] == RANGE)
-			{
-				bAddCondition = TRUE;
-				unsigned long dwLow = 0, dwHigh = 0;
-				ParseRange(rawDataArray[i][j], dwLow, dwHigh);
-				pCondition->SetRange(dwLow, dwHigh);
-			}
-			else if (rawDataArray[0][j] == AVERAGE)
-			{
-				bAddCondition = TRUE;
-				unsigned long dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
-				pCondition->SetAverage(dwAverage);
-			}
-			else if (rawDataArray[0][j] == FIXEDSOURCE)
-			{
-				bAddCondition = TRUE;
-				unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
-				pCondition->SetFixedContent(dwContent);
-			}
-			else if (!rawDataArray[0][j].empty())
-			{
-				bAddCondition = TRUE;
-				wstring strName = rawDataArray[0][j];
-				unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
-				pCondition->AddContent(strName, dwContent);
+				if (rawDataArray[i][j].empty())
+				{
+					continue;
+				}
+
+				if (rawDataArray[0][j] != CONDITION && rawDataArray[0][j] != RANGE && rawDataArray[0][j] != AVERAGE)
+				{
+					wstring strName = rawDataArray[i][j];
+					m_elementNameList.push_back(strName);
+				}
 			}
 		}
+		else
+		{
+			for (unsigned long j = 0; j < dwColCount; j++)
+			{
+				if (rawDataArray[i][j].empty())
+				{
+					continue;
+				}
+				if (0 != i)
+				{
+					bAddCondition = TRUE;
+				}
+
+				int nElementIndex = 0;
+				if (rawDataArray[0][j] == CONDITION)
+				{
+					pCondition->SetName(rawDataArray[i][j]);
+				}
+				else if (rawDataArray[0][j] == RANGE)
+				{
+					unsigned long dwLow = 0, dwHigh = 0;
+					ParseRange(rawDataArray[i][j], dwLow, dwHigh);
+					pCondition->SetRange(dwLow, dwHigh);
+				}
+				else if (rawDataArray[0][j] == AVERAGE)
+				{
+					unsigned long dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
+					pCondition->SetAverage(dwAverage);
+				}
+				else if (!rawDataArray[0][j].empty())
+				{
+					unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
+					pCondition->AddContent(nElementIndex, dwContent, false);
+					nElementIndex++;
+				}
+			}
+		}
+		
 		if (bAddCondition)
 		{
 			if (i <= 18)
@@ -122,18 +126,57 @@ void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsig
 	}
 }
 
-void CAnalyzer::Analyze()
+void CAnalyzer::AnalyzeAll()
 {
+	m_ulResultCount = 0;
+	m_ullDataCount = 0;
+	unsigned long ulElementCount = m_elementNameList.size();
+	CCombination combination;
+	for (int i = 3; i <= 5; i++)
+	{
+		combination.Calculate(ulElementCount, i);
+
+		combList selectionList = combination.GetResultsList();
+		for (const auto& selection : selectionList)
+		{
+			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
+		}
+	}
 	
 }
 
-double CAnalyzer::GetTotalScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList)
+double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
-	double dfTotalScore = 0;
+	double lfTotalScore = 0;
 	for (auto& group : m_groupList)
 	{
-		dfTotalScore += group.GetScore(nElemCount, pUlRatioList, pUlContentList);
+		lfTotalScore += group.GetScore(nElemCount, pUlRatioList, pUlContentIndexList);
 	}
 
-	return dfTotalScore;
+	return lfTotalScore;
+}
+
+void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
+{
+	double lfTotalScore = GetTotalScore(nElemCount, pUlRatioList, pUlContentIndexList);
+	if (lfTotalScore > m_ulMinScore)
+	{
+		m_ulResultCount++;
+
+		CString strMessage(L"Result: ");
+		for (int i = 0; i < nElemCount; i++)
+		{
+			CString strTemp;
+			strTemp.Format(L"element index: %s, ratio: %f", m_elementNameList[pUlContentIndexList[i]], pUlRatioList[i]);
+			strMessage += strTemp;
+		}
+		strMessage += L"\r\n";
+
+		OutputDebugString(strMessage);
+	}
+}
+
+void CAnalyzer::SetMinScore(unsigned long ulMinScore)
+{
+	m_ulMinScore = ulMinScore;
 }

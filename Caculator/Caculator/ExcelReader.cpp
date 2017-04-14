@@ -95,7 +95,9 @@ HRESULT CExcelReader::ReadFile(const wstring& strFile)
 	m_excelWorkSheets.ReleaseDispatch();
 	m_excelWorkBook.ReleaseDispatch();
 	m_excelWorkBooks.ReleaseDispatch();
+	m_excelApplication.Quit();
 	m_excelApplication.ReleaseDispatch();
+	
 
 
 	return S_OK;

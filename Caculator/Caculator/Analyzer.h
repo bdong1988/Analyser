@@ -17,11 +17,20 @@ public:
 
 	void ParseRange(const wstring& strRange, unsigned long& ulLow, unsigned long& ulHigh);
 
-	void Analyze();
+	void AnalyzeAll();
 
-	double GetTotalScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList);
+	double GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
 
+	void Analyze(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
+
+	void SetMinScore(unsigned long ulMinScore);
+
+	unsigned long long GetDataCount() { return m_ullDataCount; }
 private:
 	groupList m_groupList;
+	vector<wstring> m_elementNameList;
+	unsigned long m_ulResultCount = 0;
+	unsigned long m_ulMinScore = 0;
+	unsigned long long m_ullDataCount = 0;
 };
 

@@ -24,9 +24,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Caculator\RatioCaculator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Caculator\Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>

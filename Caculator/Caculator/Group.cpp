@@ -11,14 +11,15 @@ CGroup::~CGroup()
 {
 }
 
-void CGroup::SetTotalScore(unsigned long ulScore)
+void CGroup::SetTotalScore(double lfScore)
 {
-	m_ulTotalScore = ulScore;
+	m_lfTotalScore = lfScore;
 }
 
 void CGroup::AddCondition(const CConditionPtr& pConditon)
 {
 	m_condtionList.push_back(pConditon);
+	pConditon->SetGroupTotalScore(m_lfTotalScore);
 }
 
 void CGroup::SumConditionAverage()
@@ -27,15 +28,22 @@ void CGroup::SumConditionAverage()
 	{
 		m_ulSumD += condition->GetD();
 	}
+
+	for (const auto& condition : m_condtionList)
+	{
+		condition->CalculateH(m_ulSumD);
+	}
 }
 
-double CGroup::GetScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList)
+double CGroup::GetScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
-	double dfSumE = 0;
+	double lfSumE = 0;
 	for (const auto& condition: m_condtionList)
 	{
-		dfSumE += condition->CalculateE(m_ulTotalScore, m_ulSumD, nElemCount, pUlRatioList, pUlContentList);
+		double lfE = condition->CalculateE(nElemCount, pUlRatioList, pUlContentIndexList);
+		lfSumE += lfE;
 	}
 
-	return m_ulTotalScore - dfSumE;
+	double lfG = m_lfTotalScore - lfSumE;
+	return lfG;
 }

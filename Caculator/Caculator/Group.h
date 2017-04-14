@@ -4,17 +4,17 @@
 struct GroupInfo
 {
 	unsigned long dwItemCount = 0;
-	unsigned long dwScore = 0;
+	double lfScore = 0;
 };
 
 static const vector<GroupInfo> GROUPINFO = {
-	{18,500},
-	{13, 250},
-	{3, 125},
-	{2, 125}
+	{18,50},
+	{13,25},
+	{3, 12.5},
+	{2, 12.5}
 };
 
-static const unsigned long GroupScoreFactor = 10;
+const unsigned long GROUPSCOREFACTOR = 10;
 
 using conditionList = vector<CConditionPtr>;
 
@@ -24,14 +24,14 @@ public:
 	CGroup();
 	~CGroup();
 
-	void SetTotalScore(unsigned long ulScore);
+	void SetTotalScore(double lfScore);
 	void AddCondition(const CConditionPtr& pConditon);
 	void SumConditionAverage();
 	unsigned long GetSumD() { return m_ulSumD; }
 
-	double GetScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList);
+	double GetScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
 private:
-	unsigned long m_ulTotalScore = 0;
+	double m_lfTotalScore = 0;
 	unsigned long m_ulSumD = 0;
 	conditionList m_condtionList;
 };

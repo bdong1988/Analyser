@@ -4,7 +4,8 @@
 
 #pragma once
 #include "afxwin.h"
-
+#include "Analyzer.h"
+#include "afxcmn.h"
 
 // CCaculatorDlg dialog
 class CCaculatorDlg : public CDialogEx
@@ -34,6 +35,17 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnOpenFile();
-	afx_msg void OnBnClickedBtnCaculate();
+	afx_msg void OnBnClickedBtnOpen();
+	afx_msg void OnBnClickedBtnAnalyze();
+
+	CString GetTime();
+private:
+	CAnalyzer m_analyzer;
+	CEdit m_editMinScore;
 	CEdit m_editFilePath;
+	CProgressCtrl m_progress;	
+	CStatic m_staticTimeStart;
+	CStatic m_staticTimeEnd;
+public:
+	CStatic m_staticDataCount;
 };

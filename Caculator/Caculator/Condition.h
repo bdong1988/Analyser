@@ -1,6 +1,6 @@
 #pragma once
 
-const static unsigned long FACTOR = 1000;
+const unsigned long FACTOR = 1000;
 
 struct range
 {
@@ -10,19 +10,19 @@ struct range
 
 struct element
 {
-	element(const wstring& strName, unsigned long ulContent, bool bFixed)
-		:name(strName),
-		content(ulContent),
-		fixed(bFixed)
+	element(int nIndex, unsigned long ulContent, bool bFixed):
+		m_nIndex(nIndex),
+		m_ulContent(ulContent),
+		m_bfixed(bFixed)
 	{
 
 	}
-	wstring name;
-	unsigned long content = 0;
-	bool fixed = false;
+	int m_nIndex = -1;
+	unsigned long m_ulContent = 0;
+	bool m_bfixed = false;
 };
 
-using contentMap = map<wstring, element>;
+using contentList = vector<element>;
 
 
 class CCondition
@@ -31,20 +31,22 @@ public:
 	CCondition();
 	~CCondition();
 
-
 	void SetName(const wstring& strName);
-	void SetAverage(unsigned long dwAverage);
-	void SetRange(unsigned long dwLow, unsigned long dwHigh);
-	void AddContent(const wstring& strElementName, unsigned long dwContent, bool bFixed);
+	void SetAverage(unsigned long ulAverage);
+	void SetRange(unsigned long ulLow, unsigned long ulHigh);
+	void AddContent(int nIndex, unsigned long dwContent, bool bFixed);
 	unsigned long GetD() { return m_ulAverage; }
-
-	double CalculateE(unsigned long ulGroupTotalScore, unsigned long ulSumD, int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList);
+	void CalculateH(unsigned long ulSumD);
+	void SetGroupTotalScore(double lfScore);
+	double CalculateE(const int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
 private:
 	wstring m_strCondtionName;
 	range m_range;
-	contentMap m_contentMap;
+	contentList m_contentList;
 	unsigned long m_ulAverage = 0;
 	int m_dwGroupIndex = -1;
+	double m_lfH = 0;
+	double m_lfGroupTotalScore = 0;
 };
 
 using CConditionPtr = std::shared_ptr<CCondition>;

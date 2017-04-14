@@ -8,13 +8,12 @@
 #include "afxdialogex.h"
 
 #include "ExcelReader.h"
-#include "Analyzer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-const LPWSTR FILEFILTER = _T("Excel(*.xlsx)|*.xlsx|All Files(*.*)|*.*||");
+const LPWSTR FILEFILTER = _T("Excel(*.xlsx)|*.xlsx|Excel(*.xls)|*.xls|All Files(*.*)|*.*||");
 
 // CAboutDlg dialog used for App About
 
@@ -63,6 +62,11 @@ void CCaculatorDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_FILEPATH, m_editFilePath);
+	DDX_Control(pDX, IDC_EDIT_MINSCORE, m_editMinScore);
+	DDX_Control(pDX, IDC_PROGRESS, m_progress);
+	DDX_Control(pDX, IDC_STATIC_TIME_START, m_staticTimeStart);
+	DDX_Control(pDX, IDC_STATIC_TIME_END, m_staticTimeEnd);
+	DDX_Control(pDX, IDC_DATA_COUNT, m_staticDataCount);
 }
 
 BEGIN_MESSAGE_MAP(CCaculatorDlg, CDialogEx)
@@ -70,7 +74,8 @@ BEGIN_MESSAGE_MAP(CCaculatorDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_OPEN_FILE, &CCaculatorDlg::OnBnClickedBtnOpenFile)
-	ON_BN_CLICKED(IDC_BTN_CACULATE, &CCaculatorDlg::OnBnClickedBtnCaculate)
+	ON_BN_CLICKED(IDC_BTN_OPEN, &CCaculatorDlg::OnBnClickedBtnOpen)
+	ON_BN_CLICKED(IDC_BTN_ANALYZE, &CCaculatorDlg::OnBnClickedBtnAnalyze)
 END_MESSAGE_MAP()
 
 
@@ -106,7 +111,7 @@ BOOL CCaculatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-
+	m_editMinScore.SetWindowText(L"90");
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -174,9 +179,9 @@ void CCaculatorDlg::OnBnClickedBtnOpenFile()
 	}
 }
 
-
-void CCaculatorDlg::OnBnClickedBtnCaculate()
+void CCaculatorDlg::OnBnClickedBtnOpen()
 {
+	// TODO: Add your control notification handler code here
 	CString strFilePath;
 	m_editFilePath.GetWindowText(strFilePath);
 	if (strFilePath.IsEmpty())
@@ -186,8 +191,39 @@ void CCaculatorDlg::OnBnClickedBtnCaculate()
 
 	CExcelReader reader;
 	HRESULT hr = reader.ReadFile(strFilePath.GetBuffer());
-	CAnalyzer analyzer;
-	analyzer.InitilizeData(reader.GetRawContents());
+	m_analyzer.InitilizeData(reader.GetRawContents());
+}
 
-	
+
+void CCaculatorDlg::OnBnClickedBtnAnalyze()
+{
+	CString strMinScore;
+	m_editMinScore.GetWindowText(strMinScore);
+	m_analyzer.SetMinScore(_wtol(strMinScore));
+	CString strStartTime(L"Start Time: ");
+	strStartTime += GetTime();
+	m_staticTimeStart.SetWindowText(strStartTime);
+	m_analyzer.AnalyzeAll();
+	CString strEndTime(L"End Time: ");
+	strEndTime += GetTime();
+	m_staticTimeEnd.SetWindowText(strEndTime);
+
+	CString strCount;
+	strCount.Format(L"DataCount: %llu", m_analyzer.GetDataCount());
+	m_staticDataCount.SetWindowText(strCount);
+}
+
+CString CCaculatorDlg::GetTime()
+{
+	CString strTime;
+	SYSTEMTIME st = { 0 };
+	GetLocalTime(&st);
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", st.wYear,
+		st.wMonth,
+		st.wDay,
+		st.wHour,
+		st.wMinute,
+		st.wSecond);
+
+	return strTime;
 }

@@ -13,8 +13,6 @@ public:
 
 	static unsigned long GetNumFromString(const wstring& str)
 	{
-		float fVal = _wtof(str.c_str());
-
 		int nIndex = str.find(L'.');
 		if (nIndex < 0)
 		{
