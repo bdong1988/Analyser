@@ -190,6 +190,7 @@
     <ClInclude Include="Caculator.h" />
     <ClInclude Include="CaculatorDlg.h" />
     <ClInclude Include="CApplication.h" />
+    <ClInclude Include="Combination.h" />
     <ClInclude Include="Condition.h" />
     <ClInclude Include="CRange.h" />
     <ClInclude Include="CWorkbook.h" />

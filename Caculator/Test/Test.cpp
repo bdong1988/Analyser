@@ -4,16 +4,14 @@
 #include "stdafx.h"
 #include "..\Caculator\RatioCaculator.h"
 #include "..\Caculator\Utility.h"
+#include "..\Caculator\Combination.h"
 
 int main()
 {
+<<<<<<< HEAD
 	CRatioCaculator caculator;
 	caculator.Caculate(3, 1000);
-
-	int n = CUtility::GetNumFromString(L"20.496");
-	int n2 = CUtility::GetNumFromString(L"20.49");
-	int n3 = CUtility::GetNumFromString(L"20.4");
-	int n4 = CUtility::GetNumFromString(L"20.");
+>>>>>>> bf19e60065f1cc2c838252cc1df3cd1c1cac0515
     return 0;
 }
 

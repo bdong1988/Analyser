@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <math.h>
 #include "Condition.h"
 
 
@@ -15,22 +16,47 @@ void CCondition::SetName(const wstring& strName)
 {
 	m_strCondtionName = strName;
 }
-void CCondition::SetAverage(DWORD dwAverage)
+
+void CCondition::SetAverage(unsigned long dwAverage)
 {
-	m_dwAverage = dwAverage;
+	m_ulAverage = dwAverage;
 }
-void CCondition::SetRange(DWORD dwLow, DWORD dwHigh)
+
+void CCondition::SetRange(unsigned long dwLow, unsigned long dwHigh)
 {
 	m_range.high = dwHigh;
 	m_range.low = dwLow;
 }
 
-void CCondition::SetFixedContent(DWORD dwContent)
+void CCondition::AddContent(const wstring& strElementName, unsigned long dwContent, bool bFixed)
 {
-	m_dwFixedContent = dwContent;
+	element newElement(strElementName,dwContent,bFixed);
+	m_contentMap[strElementName]
 }
 
-void CCondition::AddContent(const wstring& strName, DWORD dwContent)
+double CCondition::CalculateE(unsigned long ulGroupTotalScore, unsigned long ulSumD, int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList)
 {
-	m_contentMap[strName] = dwContent;
+	unsigned long ulB = 0;
+	for (int i = 0; i < nElemCount; i++)
+	{
+		ulB += pUlRatioList[i] * pUlContentList[i];
+	}
+
+	if (ulB >= m_range.low || ulB <= m_range.high)
+	{
+		return 0;
+	}
+
+	double dfC = 0;
+
+	if (ulB < m_range.low)
+	{
+		dfC = (double)(m_range.low - ulB) / (double)m_range.low;
+	}
+	else
+	{
+		dfC = (double)(ulB - m_range.high) / (double)m_range.high;
+	}
+
+	return (double)ulGroupTotalScore * dfC * m_ulAverage / (double)ulSumD;
 }

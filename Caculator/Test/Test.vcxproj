@@ -138,6 +138,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Caculator\Combination.h" />
     <ClInclude Include="..\Caculator\RatioCaculator.h" />
     <ClInclude Include="..\Caculator\Utility.h" />
     <ClInclude Include="stdafx.h" />

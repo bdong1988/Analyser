@@ -11,14 +11,14 @@ public:
 
 	}
 
-	static int GetNumFromString(const wstring& str)
+	static unsigned long GetNumFromString(const wstring& str)
 	{
 		float fVal = _wtof(str.c_str());
 
 		int nIndex = str.find(L'.');
 		if (nIndex < 0)
 		{
-			return _wtoi(str.c_str());
+			return _wtol(str.c_str());
 		}
 		
 		int nLength = str.length();
@@ -43,7 +43,7 @@ public:
 
 		wstring strNew = strInteger + strDecimal + strAddional;
 		
-		return _wtoi(strNew.c_str());
+		return _wtol(strNew.c_str());
 	}
 };
 

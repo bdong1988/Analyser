@@ -30,6 +30,9 @@
     <ClInclude Include="..\Caculator\Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Caculator\Combination.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

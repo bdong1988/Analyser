@@ -3,8 +3,8 @@
 
 struct GroupInfo
 {
-	DWORD dwItemCount = 0;
-	DWORD dwScore = 0;
+	unsigned long dwItemCount = 0;
+	unsigned long dwScore = 0;
 };
 
 static const vector<GroupInfo> GROUPINFO = {
@@ -14,7 +14,7 @@ static const vector<GroupInfo> GROUPINFO = {
 	{2, 125}
 };
 
-static const DWORD GroupScoreFactor = 10;
+static const unsigned long GroupScoreFactor = 10;
 
 using conditionList = vector<CConditionPtr>;
 
@@ -24,10 +24,15 @@ public:
 	CGroup();
 	~CGroup();
 
-	void SetTotalScore(DWORD dwScore);
+	void SetTotalScore(unsigned long ulScore);
 	void AddCondition(const CConditionPtr& pConditon);
+	void SumConditionAverage();
+	unsigned long GetSumD() { return m_ulSumD; }
+
+	double GetScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList);
 private:
-	DWORD m_dwTotalScore = 0;
+	unsigned long m_ulTotalScore = 0;
+	unsigned long m_ulSumD = 0;
 	conditionList m_condtionList;
 };
 

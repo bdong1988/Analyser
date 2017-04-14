@@ -29,8 +29,8 @@ CAnalyzer::~CAnalyzer()
 
 void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 {
-	DWORD dwRowCount = rawDataArray.size();
-	for (DWORD i = 0; i < dwRowCount; i++)
+	unsigned long dwRowCount = rawDataArray.size();
+	for (unsigned long i = 0; i < dwRowCount; i++)
 	{
 		if (0 == i)
 		{
@@ -39,10 +39,10 @@ void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 
 		CConditionPtr pCondition = std::make_shared<CCondition>();
 
-		DWORD dwColCount = rawDataArray[i].size();
+		unsigned long dwColCount = rawDataArray[i].size();
 		BOOL bAddCondition = FALSE;
 
-		for (DWORD j = 0; j < dwColCount; j++)
+		for (unsigned long j = 0; j < dwColCount; j++)
 		{	
 			if (rawDataArray[i][j].empty())
 			{
@@ -58,27 +58,27 @@ void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 			else if (rawDataArray[0][j] == RANGE)
 			{
 				bAddCondition = TRUE;
-				DWORD dwLow = 0, dwHigh = 0;
+				unsigned long dwLow = 0, dwHigh = 0;
 				ParseRange(rawDataArray[i][j], dwLow, dwHigh);
 				pCondition->SetRange(dwLow, dwHigh);
 			}
 			else if (rawDataArray[0][j] == AVERAGE)
 			{
 				bAddCondition = TRUE;
-				DWORD dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
+				unsigned long dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
 				pCondition->SetAverage(dwAverage);
 			}
 			else if (rawDataArray[0][j] == FIXEDSOURCE)
 			{
 				bAddCondition = TRUE;
-				DWORD dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
+				unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
 				pCondition->SetFixedContent(dwContent);
 			}
 			else if (!rawDataArray[0][j].empty())
 			{
 				bAddCondition = TRUE;
 				wstring strName = rawDataArray[0][j];
-				DWORD dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
+				unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
 				pCondition->AddContent(strName, dwContent);
 			}
 		}
@@ -103,20 +103,37 @@ void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 		}
 
 	}
+
+	for (auto& group : m_groupList)
+	{
+		group.SumConditionAverage();
+	}
+
 }
 
-void CAnalyzer::ParseRange(const wstring& strRange, DWORD & dwLow, DWORD & dwHigh)
+void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsigned long & ulHigh)
 {
 	wregex pattern(LR"(([0-9.]+)-([0-9.]+))");
 	wcmatch matchResult;
 	if (regex_match(strRange.c_str(), matchResult, pattern))
 	{
-		dwLow = CUtility::GetNumFromString(matchResult[1].str());
-		dwHigh = CUtility::GetNumFromString(matchResult[2].str());
+		ulLow = CUtility::GetNumFromString(matchResult[1].str());
+		ulHigh = CUtility::GetNumFromString(matchResult[2].str());
 	}
 }
 
 void CAnalyzer::Analyze()
 {
+	
+}
 
+double CAnalyzer::GetTotalScore(int nElemCount, unsigned long* pUlRatioList, unsigned long* pUlContentList)
+{
+	double dfTotalScore = 0;
+	for (auto& group : m_groupList)
+	{
+		dfTotalScore += group.GetScore(nElemCount, pUlRatioList, pUlContentList);
+	}
+
+	return dfTotalScore;
 }
