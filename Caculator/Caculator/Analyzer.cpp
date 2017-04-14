@@ -3,6 +3,7 @@
 #include "Utility.h"
 #include "Combination.h"
 #include "spliter.h"
+#include "AnalyzeThread.h"
 
 static const wstring CONDITION = L"condition";
 static const wstring RANGE = L"range";
@@ -134,13 +135,8 @@ void CAnalyzer::AnalyzeAll()
 	CCombination combination;
 	for (int i = 3; i <= 5; i++)
 	{
-		combination.Calculate(ulElementCount, i);
-
-		combList selectionList = combination.GetResultsList();
-		for (const auto& selection : selectionList)
-		{
-			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
-		}
+		CAnalyzeThread thread(this, ulElementCount, i);
+		thread.Caculate();
 	}
 	
 }
@@ -162,21 +158,15 @@ void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const
 	if (lfTotalScore > m_ulMinScore)
 	{
 		m_ulResultCount++;
-
-		CString strMessage(L"Result: ");
-		for (int i = 0; i < nElemCount; i++)
-		{
-			CString strTemp;
-			strTemp.Format(L"element index: %s, ratio: %f", m_elementNameList[pUlContentIndexList[i]], pUlRatioList[i]);
-			strMessage += strTemp;
-		}
-		strMessage += L"\r\n";
-
-		OutputDebugString(strMessage);
 	}
 }
 
 void CAnalyzer::SetMinScore(unsigned long ulMinScore)
 {
 	m_ulMinScore = ulMinScore;
+}
+
+void CAnalyzer::AddDataCount(unsigned long long ullDataCount)
+{
+	m_ullDataCount += ullDataCount;
 }

@@ -25,6 +25,8 @@ public:
 
 	void SetMinScore(unsigned long ulMinScore);
 
+	void AddDataCount(unsigned long long ullDataCount);
+
 	unsigned long long GetDataCount() { return m_ullDataCount; }
 private:
 	groupList m_groupList;
