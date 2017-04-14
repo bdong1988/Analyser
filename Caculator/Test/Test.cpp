@@ -8,7 +8,7 @@
 int main()
 {
 	CRatioCaculator caculator;
-	caculator.Caculate(5, 1000);
+	caculator.Caculate(3, 1000);
 
 	int n = CUtility::GetNumFromString(L"20.496");
 	int n2 = CUtility::GetNumFromString(L"20.49");
