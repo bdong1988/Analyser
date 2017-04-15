@@ -28,6 +28,8 @@ public:
 	void AddDataCount(unsigned long long ullDataCount);
 
 	unsigned long long GetDataCount() { return m_ullDataCount; }
+
+	bool IsContinue(int nCurrentGroup, double lfScore);
 private:
 	groupList m_groupList;
 	vector<wstring> m_elementNameList;

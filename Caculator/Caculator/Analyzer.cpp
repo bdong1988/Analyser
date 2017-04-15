@@ -135,8 +135,13 @@ void CAnalyzer::AnalyzeAll()
 	CCombination combination;
 	for (int i = 3; i <= 5; i++)
 	{
-		CAnalyzeThread thread(this, ulElementCount, i);
-		thread.Caculate();
+		combination.Calculate(ulElementCount, i);
+
+		combList selectionList = combination.GetResultsList();
+		for (const auto& selection : selectionList)
+		{
+			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
+		}
 	}
 	
 }
@@ -144,9 +149,15 @@ void CAnalyzer::AnalyzeAll()
 double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
 	double lfTotalScore = 0;
+	int nGroupIndex = 0;
 	for (auto& group : m_groupList)
 	{
 		lfTotalScore += group.GetScore(nElemCount, pUlRatioList, pUlContentIndexList);
+		if (!IsContinue(nGroupIndex, lfTotalScore))
+		{
+			break;
+		}
+		nGroupIndex++;
 	}
 
 	return lfTotalScore;
@@ -169,4 +180,20 @@ void CAnalyzer::SetMinScore(unsigned long ulMinScore)
 void CAnalyzer::AddDataCount(unsigned long long ullDataCount)
 {
 	m_ullDataCount += ullDataCount;
+}
+
+bool CAnalyzer::IsContinue(int nCurrentGroup, double lfScore)
+{
+	double lfTempScore = 0;
+	for (int i = GROUPINFO.size()-1; i > nCurrentGroup; i--)
+	{
+		lfTempScore += GROUPINFO[i].lfScore;
+	}
+	
+	if (lfTempScore + lfScore >= m_ulMinScore)
+	{
+		return true;
+	}
+
+	return false;
 }

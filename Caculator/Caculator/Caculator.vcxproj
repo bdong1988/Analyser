@@ -187,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analyzer.h" />
+    <ClInclude Include="AnalyzeThread.h" />
     <ClInclude Include="Caculator.h" />
     <ClInclude Include="CaculatorDlg.h" />
     <ClInclude Include="CApplication.h" />
