@@ -12,14 +12,14 @@
 #define IDC_BTN_CACULATE                1002
 #define IDC_BTN_ANALYZE                 1002
 #define IDC_BTN_OPEN                    1003
-#define IDC_LIST2                       1004
 #define IDC_LIST_RESULTS                1004
 #define IDC_EDIT_MINSCORE               1005
 #define IDC_PROGRESS                    1006
 #define IDC_STATIC_TIME_START           1007
 #define IDC_STATIC_TIME_END             1008
-#define IDC_STATIC_TIME_END2            1009
 #define IDC_DATA_COUNT                  1009
+#define IDC_HIGH_SCORE                  1010
+#define IDC_LOW_SCORE                   1011
 
 // Next default values for new objects
 // 

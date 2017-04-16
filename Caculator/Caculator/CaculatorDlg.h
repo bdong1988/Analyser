@@ -48,4 +48,6 @@ private:
 	CStatic m_staticTimeEnd;
 public:
 	CStatic m_staticDataCount;
+	CStatic m_staticHighScore;
+	CStatic m_staticLowScore;
 };

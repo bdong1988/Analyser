@@ -4,6 +4,9 @@
 #include "Combination.h"
 #include "spliter.h"
 #include "AnalyzeThread.h"
+#include "CSVProcessor.h"
+
+#define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
 
 static const wstring CONDITION = L"condition";
 static const wstring RANGE = L"range";
@@ -16,11 +19,16 @@ CAnalyzer::CAnalyzer()
 	{
 		m_groupList[i].SetTotalScore(GROUPINFO[i].lfScore);
 	}
+
+	m_hFinishEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }	
 
 
 CAnalyzer::~CAnalyzer()
 {
+	SAFE_RELEASEHANDLE(m_hAnalyzeThread);
+	SAFE_RELEASEHANDLE(m_hResultLogThread);
+	SAFE_RELEASEHANDLE(m_hFinishEvent);
 }
 
 void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
@@ -127,15 +135,40 @@ void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsig
 	}
 }
 
+void CAnalyzer::StartAnalyze()
+{
+	if (m_bRunning)
+	{
+		return;
+	}
+
+	if (!m_hAnalyzeThread)
+	{
+		SAFE_RELEASEHANDLE(m_hAnalyzeThread);
+	}
+
+	m_hAnalyzeThread = CreateThread(NULL, 0, AnalyzeThreadProc, this, 0, nullptr);
+
+	if (!m_hResultLogThread)
+	{
+		SAFE_RELEASEHANDLE(m_hResultLogThread);
+	}
+
+	m_hResultLogThread = CreateThread(NULL, 0, LogThreadProc, this, 0, nullptr);
+}
+
 void CAnalyzer::AnalyzeAll()
 {
-	m_ulResultCount = 0;
+	m_bRunning = true;
+	ResetEvent(m_hFinishEvent);
+
 	m_ullDataCount = 0;
-	unsigned long ulElementCount = m_elementNameList.size();
+	m_lfHighScore = 0;
+
 	CCombination combination;
 	for (int i = 3; i <= 5; i++)
 	{
-		combination.Calculate(ulElementCount, i);
+		combination.Calculate(m_elementNameList.size(), i);
 
 		combList selectionList = combination.GetResultsList();
 		for (const auto& selection : selectionList)
@@ -143,7 +176,62 @@ void CAnalyzer::AnalyzeAll()
 			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
 		}
 	}
-	
+
+	SetEvent(m_hFinishEvent);
+	m_bRunning = false;
+}
+
+void CAnalyzer::LogResults()
+{
+	CCSVProcessor csvProcessor;
+	wstring strFileName;
+	strFileName.resize(1024);
+	GetModuleFileName(nullptr, (LPWSTR)strFileName.data(), 1024);
+	wstring::size_type pos = strFileName.rfind(L"\\");
+	strFileName = strFileName.substr(0, pos + 1);
+	strFileName += L"AnalyzeResult.csv";
+	if (!csvProcessor.OpenCSV(strFileName.c_str()))
+	{
+		return;
+	}
+
+	csvProcessor.Write(GenerateResultHeader());
+	bool bFinished = true;
+	bool bContinue = true;
+	while (bContinue)
+	{
+		HANDLE events[2] = {
+			m_resultQueue.GetQueueEvent(),
+			m_hFinishEvent
+		};
+
+		DWORD eventIndex = WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE);
+		switch (eventIndex)
+		{
+		case 0:
+			if (!m_resultQueue.IsEmpty())
+			{
+				csvProcessor.Write(m_resultQueue.PeekResult());
+			}
+			else
+			{
+				m_resultQueue.ClearEvent();
+			}
+			break;
+		case 1:
+			if (m_resultQueue.IsEmpty())
+			{
+				csvProcessor.CloseCSV();
+				bContinue = false;
+			}
+			bFinished = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	return;
 }
 
 double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
@@ -166,9 +254,15 @@ double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioLis
 void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
 	double lfTotalScore = GetTotalScore(nElemCount, pUlRatioList, pUlContentIndexList);
+
 	if (lfTotalScore > m_ulMinScore)
 	{
-		m_ulResultCount++;
+		if (lfTotalScore > m_lfHighScore)
+		{
+			m_lfHighScore = lfTotalScore;
+		}
+
+		m_resultQueue.PushResult(lfTotalScore, nElemCount, pUlContentIndexList, pUlRatioList);
 	}
 }
 
@@ -196,4 +290,43 @@ bool CAnalyzer::IsContinue(int nCurrentGroup, double lfScore)
 	}
 
 	return false;
+}
+
+wstring CAnalyzer::GenerateResultHeader()
+{
+	wstring strHeader(L"ตรทึ,");
+	int nSize = m_elementNameList.size();
+
+	for (int i = 0; i < nSize; i++)
+	{
+		strHeader += m_elementNameList[i];
+		if (i != nSize - 1)
+		{
+			strHeader += L",";
+		}
+		else
+		{
+			strHeader += L"\r\n";
+		}
+	}
+
+	return strHeader;
+}
+
+DWORD WINAPI CAnalyzer::AnalyzeThreadProc(PVOID pParam)
+{
+	if (pParam)
+	{
+		((CAnalyzer*)pParam)->AnalyzeAll();
+	}
+	return 0;
+}
+
+DWORD WINAPI CAnalyzer::LogThreadProc(PVOID pParam)
+{
+	if (pParam)
+	{
+		((CAnalyzer*)pParam)->LogResults();
+	}
+	return 0;
 }

@@ -33,11 +33,14 @@
 
 #include <afxcontrolbars.h>     // MFC support for ribbons and control bars
 
+#include <strsafe.h>
+
 #include <string>
 #include <map>
 #include <set>
 #include <vector>
 #include <list>
+#include <deque>
 #include <memory>
 #include <regex>
 using namespace std;

@@ -67,6 +67,8 @@ void CCaculatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_TIME_START, m_staticTimeStart);
 	DDX_Control(pDX, IDC_STATIC_TIME_END, m_staticTimeEnd);
 	DDX_Control(pDX, IDC_DATA_COUNT, m_staticDataCount);
+	DDX_Control(pDX, IDC_HIGH_SCORE, m_staticHighScore);
+	DDX_Control(pDX, IDC_LOW_SCORE, m_staticLowScore);
 }
 
 BEGIN_MESSAGE_MAP(CCaculatorDlg, CDialogEx)
@@ -111,7 +113,7 @@ BOOL CCaculatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	m_editMinScore.SetWindowText(L"90");
+	m_editMinScore.SetWindowText(L"83");
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -203,7 +205,7 @@ void CCaculatorDlg::OnBnClickedBtnAnalyze()
 	CString strStartTime(L"Start Time: ");
 	strStartTime += GetTime();
 	m_staticTimeStart.SetWindowText(strStartTime);
-	m_analyzer.AnalyzeAll();
+	m_analyzer.StartAnalyze();
 	CString strEndTime(L"End Time: ");
 	strEndTime += GetTime();
 	m_staticTimeEnd.SetWindowText(strEndTime);
@@ -211,6 +213,10 @@ void CCaculatorDlg::OnBnClickedBtnAnalyze()
 	CString strCount;
 	strCount.Format(L"DataCount: %llu", m_analyzer.GetDataCount());
 	m_staticDataCount.SetWindowText(strCount);
+
+	CString strHighScore;
+	strHighScore.Format(L"Highest Score: %lf", m_analyzer.GetHighScore());
+	m_staticHighScore.SetWindowText(strHighScore);
 }
 
 CString CCaculatorDlg::GetTime()
