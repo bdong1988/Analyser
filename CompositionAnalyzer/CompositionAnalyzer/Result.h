@@ -4,7 +4,7 @@
 #include "CritlSec.h"
 
 #define BUFFER_SIZE 1024
-#define QUEUE_SIZE 10240000
+#define QUEUE_SIZE 1000
 
 class Element
 {
@@ -82,8 +82,7 @@ class CResultQueue
 public:
 	CResultQueue()
 	{
-		m_resultQueue.resize(m_ulQueueSize);
-		m_hQueueEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		m_resultQueue.resize(QUEUE_SIZE);
 	}
 
 	~CResultQueue()
@@ -91,40 +90,14 @@ public:
 
 	}
 
-	void PushResult(double lfScore, int nElementCount, const unsigned long* pElementIndexList, const unsigned long* pElementRatioList)
+	void Resize(unsigned long ulSize)
 	{
-		m_resultQueue[m_nQueueHead] = CResult(lfScore, nElementCount, pElementIndexList, pElementRatioList);
-		m_nQueueHead++;
-
-		if (m_nQueueHead >= m_ulQueueSize)
-		{
-			m_nQueueHead = m_nQueueHead % m_ulQueueSize;
-			if (m_nQueueHead == m_nQueueTail)
-			{
-				m_ulQueueSize = m_ulQueueSize * 2;
-				m_resultQueue.resize(m_ulQueueSize);
-
-			}
-		}
-
-		SetEvent(m_hQueueEvent);
+		m_resultQueue.resize(ulSize);
 	}
 
-	void ClearEvent()
+	void PushResult(double lfScore, int nElementCount, const unsigned long* pElementRatioListconst, const unsigned long* pElementIndexList)
 	{
-		ResetEvent(m_hQueueEvent);
-	}
 
-	wstring PeekResult()
-	{
-		wstring strResult = m_resultQueue[m_nQueueTail].ConvertToRow();
-		m_nQueueTail++;
-		if (m_nQueueTail >= m_ulQueueSize)
-		{
-			m_nQueueTail = m_nQueueTail % m_ulQueueSize;
-		}
-
-		return strResult;
 	}
 
 	void Clear()
@@ -132,21 +105,6 @@ public:
 		m_resultQueue.clear();
 	}
 
-	HANDLE GetQueueEvent()
-	{
-		return m_hQueueEvent;
-	}
-
-	bool IsEmpty()
-	{
-		return m_nQueueHead == m_nQueueTail;
-	}
-
 private:
 	vector<CResult> m_resultQueue;
-	CCritSec m_csRsultQueueLock;
-	HANDLE m_hQueueEvent = nullptr;
-	unsigned long m_ulQueueSize = QUEUE_SIZE;
-	int m_nQueueHead = 0;
-	int m_nQueueTail = 0;
 };

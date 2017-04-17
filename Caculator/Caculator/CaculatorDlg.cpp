@@ -78,6 +78,7 @@ BEGIN_MESSAGE_MAP(CCaculatorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_OPEN_FILE, &CCaculatorDlg::OnBnClickedBtnOpenFile)
 	ON_BN_CLICKED(IDC_BTN_OPEN, &CCaculatorDlg::OnBnClickedBtnOpen)
 	ON_BN_CLICKED(IDC_BTN_ANALYZE, &CCaculatorDlg::OnBnClickedBtnAnalyze)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -113,7 +114,8 @@ BOOL CCaculatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	m_editMinScore.SetWindowText(L"83");
+	m_editMinScore.SetWindowText(L"80");
+	m_progress.SetRange(0, 100);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -177,7 +179,6 @@ void CCaculatorDlg::OnBnClickedBtnOpenFile()
 	{
 		strFilePath = fileDlg.GetPathName();
 		m_editFilePath.SetWindowText(strFilePath);
-
 	}
 }
 
@@ -205,19 +206,57 @@ void CCaculatorDlg::OnBnClickedBtnAnalyze()
 	CString strStartTime(L"Start Time: ");
 	strStartTime += GetTime();
 	m_staticTimeStart.SetWindowText(strStartTime);
+
 	m_analyzer.StartAnalyze();
-	CString strEndTime(L"End Time: ");
-	strEndTime += GetTime();
-	m_staticTimeEnd.SetWindowText(strEndTime);
 
-	CString strCount;
-	strCount.Format(L"DataCount: %llu", m_analyzer.GetDataCount());
-	m_staticDataCount.SetWindowText(strCount);
-
-	CString strHighScore;
-	strHighScore.Format(L"Highest Score: %lf", m_analyzer.GetHighScore());
-	m_staticHighScore.SetWindowText(strHighScore);
+	SetTimer(1, 500, nullptr);
 }
+
+void CCaculatorDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 1)
+	{
+		if (!m_analyzer.IsRunning())
+		{
+			if (!m_bAnalyzeInfoSet)
+			{
+				CString strEndTime(L"End Time: ");
+				strEndTime += GetTime();
+				m_staticTimeEnd.SetWindowText(strEndTime);
+
+				CString strCount;
+				strCount.Format(L"DataCount: %llu", m_analyzer.GetDataCount());
+				m_staticDataCount.SetWindowText(strCount);
+
+				CString strHighScore;
+				strHighScore.Format(L"Highest Score: %lf", m_analyzer.GetHighScore());
+				m_staticHighScore.SetWindowText(strHighScore);
+			}
+
+			m_bAnalyzeInfoSet = true;
+
+			if (!m_analyzer.IsLogging())
+			{
+				KillTimer(1);
+			}
+			
+		}
+		else
+		{
+			if (m_analyzer.IsLogging())
+			{
+				m_progress.SetPos(m_nProgress++);
+				m_nProgress = m_nProgress % 100;
+			}
+
+			CString strCount;
+			strCount.Format(L"DataCount: %llu", m_analyzer.GetDataCount());
+			m_staticDataCount.SetWindowText(strCount);
+		}
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}
+
 
 CString CCaculatorDlg::GetTime()
 {
@@ -233,3 +272,5 @@ CString CCaculatorDlg::GetTime()
 
 	return strTime;
 }
+
+

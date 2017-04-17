@@ -3,7 +3,6 @@
 #include "Utility.h"
 #include "Combination.h"
 #include "spliter.h"
-#include "AnalyzeThread.h"
 #include "CSVProcessor.h"
 
 #define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
@@ -11,6 +10,14 @@
 static const wstring CONDITION = L"condition";
 static const wstring RANGE = L"range";
 static const wstring AVERAGE = L"average";
+
+#define RESULT_QUEUE_SIZE 5
+enum
+{
+	ELEMNT_COUNT3 = 3,
+	ELEMNT_COUNT4 = 4,
+	ELEMNT_COUNT5 = 5
+};
 
 CAnalyzer::CAnalyzer()
 {
@@ -20,6 +27,10 @@ CAnalyzer::CAnalyzer()
 		m_groupList[i].SetTotalScore(GROUPINFO[i].lfScore);
 	}
 
+	m_3ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
+	m_4ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
+	m_5ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
+
 	m_hFinishEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }	
 
@@ -28,6 +39,23 @@ CAnalyzer::~CAnalyzer()
 {
 	SAFE_RELEASEHANDLE(m_hAnalyzeThread);
 	SAFE_RELEASEHANDLE(m_hFinishEvent);
+}
+
+void CAnalyzer::Clear()
+{
+	SAFE_RELEASEHANDLE(m_hAnalyzeThread);
+	SAFE_RELEASEHANDLE(m_hFinishEvent);
+	m_groupList.clear();
+	m_elementNameList.clear();
+	m_totoalResultQueue.Clear();
+	m_3ElemResultQueue.Clear();
+	m_4ElemResultQueue.Clear();
+	m_5ElemResultQueue.Clear();
+	m_ullDataCount = 0;
+	m_lfHighScore = 0;
+	m_lfMinScore = 0;
+	m_bRunning = false;
+	m_bDataInitialized = false;
 }
 
 void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
@@ -125,7 +153,6 @@ void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 	{
 		group.SumConditionAverage();
 	}
-
 }
 
 void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsigned long & ulHigh)
@@ -177,27 +204,14 @@ void CAnalyzer::AnalyzeAll()
 		}
 	}
 
+	LogResults();
+
 	SetEvent(m_hFinishEvent);
 	m_bRunning = false;
 }
 
 void CAnalyzer::LogResults()
 {
-	CCSVProcessor csvProcessor;
-	wstring strFileName;
-	strFileName.resize(1024);
-	GetModuleFileName(nullptr, (LPWSTR)strFileName.data(), 1024);
-	wstring::size_type pos = strFileName.rfind(L"\\");
-	strFileName = strFileName.substr(0, pos + 1);
-	strFileName += L"AnalyzeResult.csv";
-	if (!csvProcessor.OpenCSV(strFileName.c_str()))
-	{
-		return;
-	}
-
-	csvProcessor.Write(GenerateResultHeader());
-	csvProcessor.Write(m_resultQueue.PeekResult());
-	csvProcessor.CloseCSV();
 
 }
 
@@ -222,20 +236,34 @@ void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const
 {
 	double lfTotalScore = GetTotalScore(nElemCount, pUlRatioList, pUlContentIndexList);
 
-	if (lfTotalScore > m_ulMinScore)
+	if (lfTotalScore > m_lfMinScore)
 	{
+		switch (nElemCount)
+		{
+		case ELEMNT_COUNT3:
+			m_3ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
+			break;
+		case ELEMNT_COUNT4:
+			m_4ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
+			break;
+		case ELEMNT_COUNT5:
+			m_5ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
+			break;
+		default:
+			break;
+		}
 		if (lfTotalScore > m_lfHighScore)
 		{
 			m_lfHighScore = lfTotalScore;
 		}
 
-		m_resultQueue.PushResult(lfTotalScore, nElemCount, pUlContentIndexList, pUlRatioList);
+		m_totoalResultQueue.PushResult(lfTotalScore, nElemCount, pUlContentIndexList, pUlRatioList);
 	}
 }
 
-void CAnalyzer::SetMinScore(unsigned long ulMinScore)
+void CAnalyzer::SetMinScore(double lfMinScore)
 {
-	m_ulMinScore = ulMinScore;
+	m_lfMinScore = lfMinScore;
 }
 
 void CAnalyzer::AddDataCount(unsigned long long ullDataCount)
@@ -251,29 +279,12 @@ bool CAnalyzer::IsContinue(int nCurrentGroup, double lfScore)
 		lfTempScore += GROUPINFO[i].lfScore;
 	}
 	
-	if (lfTempScore + lfScore >= m_ulMinScore)
+	if (lfTempScore + lfScore >= m_lfMinScore)
 	{
 		return true;
 	}
 
 	return false;
-}
-
-wstring CAnalyzer::GenerateResultHeader()
-{
-	wstring strHeader(L"ตรทึ,");
-	int nSize = m_elementNameList.size();
-
-	for (int i = 0; i < nSize; i++)
-	{
-		strHeader += m_elementNameList[i];
-		if (i != nSize - 1)
-		{
-			strHeader += L",";
-		}
-	}
-
-	return strHeader;
 }
 
 DWORD WINAPI CAnalyzer::AnalyzeThreadProc(PVOID pParam)

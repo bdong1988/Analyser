@@ -14,6 +14,8 @@ public:
 	CAnalyzer();
 	~CAnalyzer();
 
+	void Clear();
+
 	void InitilizeData(const contentArray& rawDataArray);
 
 	void ParseRange(const wstring& strRange, unsigned long& ulLow, unsigned long& ulHigh);
@@ -28,7 +30,7 @@ public:
 
 	void Analyze(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
 
-	void SetMinScore(unsigned long ulMinScore);
+	void SetMinScore(double lfMinScore);
 
 	void AddDataCount(unsigned long long ullDataCount);
 
@@ -37,20 +39,27 @@ public:
 
 	bool IsContinue(int nCurrentGroup, double lfScore);
 
-	wstring GenerateResultHeader();
-
 	HANDLE GetFinishedEvent() { return m_hFinishEvent; }
 	bool IsRunning() { return m_bRunning; }
+
+	vector<wstring>& GetElementNameList() { return m_elementNameList; }
 
 	static DWORD WINAPI AnalyzeThreadProc(PVOID pParam);
 private:
 	HANDLE m_hAnalyzeThread = nullptr;
 	HANDLE m_hFinishEvent = nullptr;
 	groupList m_groupList;
+
 	vector<wstring> m_elementNameList;
+	CResultQueue m_totoalResultQueue;
+	CResultQueue m_3ElemResultQueue;
+	CResultQueue m_4ElemResultQueue;
+	CResultQueue m_5ElemResultQueue;
+
 	unsigned long long m_ullDataCount = 0;
 	double		m_lfHighScore = 0;
-	CResultQueue m_resultQueue;
+	double		m_lfMinScore = 0;
 	bool m_bRunning = false;
+	bool m_bDataInitialized = false;
 };
 

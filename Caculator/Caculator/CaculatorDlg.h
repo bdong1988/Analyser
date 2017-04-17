@@ -37,6 +37,7 @@ public:
 	afx_msg void OnBnClickedBtnOpenFile();
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnAnalyze();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 	CString GetTime();
 private:
@@ -46,8 +47,9 @@ private:
 	CProgressCtrl m_progress;	
 	CStatic m_staticTimeStart;
 	CStatic m_staticTimeEnd;
-public:
 	CStatic m_staticDataCount;
 	CStatic m_staticHighScore;
 	CStatic m_staticLowScore;
+	int	m_nProgress = 0;
+	bool m_bAnalyzeInfoSet = false;
 };
