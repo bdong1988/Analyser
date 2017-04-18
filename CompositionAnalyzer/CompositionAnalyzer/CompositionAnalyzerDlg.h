@@ -40,14 +40,29 @@ public:
 	afx_msg void OnBnClickedBtnOpenDestFile();
 	afx_msg void OnBnClickedBtnAnalyze();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+
+	void DisplayResult(int nElemCount, CResultQueue& rResultQueue);
+	void AnalyzeDone();
+
 	CEdit m_editSourceFilePath;
 	CEdit m_editDestFilePath;
 	CEdit m_edtiMinScore;
 	CListCtrl m_list3Element;
 	CListCtrl m_list4Element;
 	CListCtrl m_list5Element;
+	CProgressCtrl m_progressAnalyze;
+	CButton m_btnAnalyze;
+	CButton m_btnChooseSourceFile;
+	CButton m_btnChosseDestFile;
+
+	int m_nProgressPos = 0;
+
 	CAnalyzer m_compositionAnalyzer;
 
 private:
 	void InitListControl(CListCtrl& rListControl, vector<wstring>& rElmentList);
+	
+public:
+
+	afx_msg void OnClose();
 };

@@ -10,6 +10,7 @@
 
 #define TIMER_PORGRESS 1
 #define TIMER_PROGRESS_ELAPS 200
+#define PROGRESS_RANGE 100
 
 #define SCORE_LIST_HEADER L"得分"
 
@@ -61,6 +62,7 @@ CCompositionAnalyzerDlg::CCompositionAnalyzerDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_COMPOSITIONANALYZER_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_compositionAnalyzer.SetMainDlg(this);
 }
 
 void CCompositionAnalyzerDlg::DoDataExchange(CDataExchange* pDX)
@@ -72,6 +74,10 @@ void CCompositionAnalyzerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_3ELEMENT, m_list3Element);
 	DDX_Control(pDX, IDC_LIST_4ELEMENT, m_list4Element);
 	DDX_Control(pDX, IDC_LIST_5ELEMENT, m_list5Element);
+	DDX_Control(pDX, IDC_PROGRESS_ANALYZER, m_progressAnalyze);
+	DDX_Control(pDX, IDC_BTN_ANALYZE, m_btnAnalyze);
+	DDX_Control(pDX, IDC_BTN_OPEN_SOURCE_FILE, m_btnChooseSourceFile);
+	DDX_Control(pDX, IDC_BTN_OPEN_DEST_FILE, m_btnChosseDestFile);
 }
 
 BEGIN_MESSAGE_MAP(CCompositionAnalyzerDlg, CDialogEx)
@@ -82,6 +88,7 @@ BEGIN_MESSAGE_MAP(CCompositionAnalyzerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_OPEN_DEST_FILE, &CCompositionAnalyzerDlg::OnBnClickedBtnOpenDestFile)
 	ON_BN_CLICKED(IDC_BTN_ANALYZE, &CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze)
 	ON_WM_TIMER()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -116,6 +123,8 @@ BOOL CCompositionAnalyzerDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+	m_progressAnalyze.SetRange(0, PROGRESS_RANGE);
+	m_edtiMinScore.SetWindowText(L"83");
 	// TODO: Add extra initialization here
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -182,7 +191,6 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnOpenSourceFile()
 	}
 }
 
-
 void CCompositionAnalyzerDlg::OnBnClickedBtnOpenDestFile()
 {
 	CFileDialog fileDlg(TRUE, _T(".xlsx"), nullptr, 0, FILEFILTER, this);
@@ -198,22 +206,52 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnOpenDestFile()
 
 void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 {
-	CString strFilePath;
-	m_editSourceFilePath.GetWindowText(strFilePath);
-	if (strFilePath.IsEmpty())
+	CString strSourceFilePath;
+	m_editSourceFilePath.GetWindowText(strSourceFilePath);
+
+	if (strSourceFilePath.IsEmpty())
 	{
+		AfxMessageBox(L"请调入成分文件。");
 		return;
 	}
 
+	CString strDestFilePath;
+	m_editDestFilePath.GetWindowText(strDestFilePath);
+
+	if (strDestFilePath.IsEmpty())
+	{
+		AfxMessageBox(L"请选择保存结果文件。");
+		return;
+	}
+
+	CString strMinScore;
+	m_edtiMinScore.GetWindowText(strMinScore);
+	if (strMinScore.IsEmpty())
+	{
+		AfxMessageBox(L"请设置最低评分。");
+		return;
+	}
+
+	double lfMinScore = _wtof(strMinScore);
+
 	CExcelReader reader;
-	HRESULT hr = reader.ReadFile(strFilePath.GetBuffer());
+	HRESULT hr = reader.ReadFile(strSourceFilePath.GetBuffer());
+	m_compositionAnalyzer.Clear();
 	m_compositionAnalyzer.InitilizeData(reader.GetRawContents());
 
 	InitListControl(m_list3Element, m_compositionAnalyzer.GetElementNameList());
 	InitListControl(m_list4Element, m_compositionAnalyzer.GetElementNameList());
 	InitListControl(m_list5Element, m_compositionAnalyzer.GetElementNameList());
 
+	m_compositionAnalyzer.SetMinScore(lfMinScore);
 	m_compositionAnalyzer.StartAnalyze();
+
+	m_editSourceFilePath.EnableWindow(FALSE);
+	m_editDestFilePath.EnableWindow(FALSE);
+	m_edtiMinScore.EnableWindow(FALSE);
+	m_btnAnalyze.EnableWindow(FALSE);
+	m_btnChooseSourceFile.EnableWindow(FALSE);
+	m_btnChosseDestFile.EnableWindow(FALSE);
 
 	SetTimer(TIMER_PORGRESS, TIMER_PROGRESS_ELAPS, nullptr);
 }
@@ -221,8 +259,58 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 
 void CCompositionAnalyzerDlg::OnTimer(UINT_PTR nIDEvent)
 {
-
+	if (TIMER_PORGRESS == nIDEvent)
+	{
+		if (m_compositionAnalyzer.IsRunning())
+		{
+			m_progressAnalyze.SetPos(m_nProgressPos++);
+			m_nProgressPos = m_nProgressPos % PROGRESS_RANGE;
+		}
+	}
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+void CCompositionAnalyzerDlg::DisplayResult(int nElemCount, CResultQueue& rResultQueue)
+{
+	CListCtrl* pListCtrl = nullptr;
+	switch (nElemCount)
+	{
+	case 3:
+		pListCtrl = &m_list3Element;
+		break;
+	case 4:
+		pListCtrl = &m_list4Element;
+		break;
+	case 5:
+		pListCtrl = &m_list5Element;
+		break;
+	default:
+		break;
+	}
+
+	if (!pListCtrl)
+	{
+		return;
+	}
+	for (int  i = 0; i < rResultQueue.m_resultQueue.size() -1; i++)
+	{
+		CString strScore;
+		strScore.Format(L"%lf", rResultQueue.m_resultQueue[i].m_lfScore);
+		pListCtrl->InsertItem(i, strScore);
+		elemntList& elemList = rResultQueue.m_resultQueue[i].m_listElements;
+		for (int j = 0; j < elemList.size(); j++)
+		{
+			CString strRatio;
+			strRatio.Format(L"0.%03d",elemList[j].m_ulRatio);
+			pListCtrl->SetItemText(i, elemList[j].m_nElemIndex + 1, strRatio);
+		}
+	}
+}
+
+void CCompositionAnalyzerDlg::AnalyzeDone()
+{
+	m_progressAnalyze.SetPos(PROGRESS_RANGE);
+	KillTimer(TIMER_PORGRESS);
 }
 
 void CCompositionAnalyzerDlg::InitListControl(CListCtrl & rListControl, vector<wstring>& rElmentList)
@@ -255,4 +343,15 @@ void CCompositionAnalyzerDlg::InitListControl(CListCtrl & rListControl, vector<w
 
 		rListControl.InsertColumn(i+1, &lvcolumn);
 	}
+}
+
+
+void CCompositionAnalyzerDlg::OnClose()
+{
+	if (m_compositionAnalyzer.IsRunning())
+	{
+		m_compositionAnalyzer.CancelAnalyze();
+		WaitForSingleObject(m_compositionAnalyzer.GetFinishedEvent(), INFINITE);
+	}
+	CDialogEx::OnClose();
 }

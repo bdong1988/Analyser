@@ -7,12 +7,15 @@
 
 using groupList = vector<CGroup>;
 
+class CCompositionAnalyzerDlg;
 class CAnalyzer
 {
 
 public:
 	CAnalyzer();
 	~CAnalyzer();
+
+	void SetMainDlg(CCompositionAnalyzerDlg* pDlg);
 
 	void Clear();
 
@@ -24,7 +27,7 @@ public:
 
 	void AnalyzeAll();
 
-	void LogResults();
+	void LogTotalResults();
 
 	double GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);
 
@@ -41,25 +44,26 @@ public:
 
 	HANDLE GetFinishedEvent() { return m_hFinishEvent; }
 	bool IsRunning() { return m_bRunning; }
+	void CancelAnalyze() { m_bContiue = false; }
 
 	vector<wstring>& GetElementNameList() { return m_elementNameList; }
 
 	static DWORD WINAPI AnalyzeThreadProc(PVOID pParam);
 private:
+	CCompositionAnalyzerDlg* m_pMainDlg = nullptr;
 	HANDLE m_hAnalyzeThread = nullptr;
 	HANDLE m_hFinishEvent = nullptr;
 	groupList m_groupList;
 
 	vector<wstring> m_elementNameList;
 	CResultQueue m_totoalResultQueue;
-	CResultQueue m_3ElemResultQueue;
-	CResultQueue m_4ElemResultQueue;
-	CResultQueue m_5ElemResultQueue;
+	CResultQueue m_displayResultQueue;
 
 	unsigned long long m_ullDataCount = 0;
 	double		m_lfHighScore = 0;
 	double		m_lfMinScore = 0;
 	bool m_bRunning = false;
 	bool m_bDataInitialized = false;
+	bool m_bContiue = true;
 };
 

@@ -4,6 +4,7 @@
 #include "Combination.h"
 #include "spliter.h"
 #include "CSVProcessor.h"
+#include "CompositionAnalyzerDlg.h"
 
 #define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
 
@@ -27,9 +28,8 @@ CAnalyzer::CAnalyzer()
 		m_groupList[i].SetTotalScore(GROUPINFO[i].lfScore);
 	}
 
-	m_3ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
-	m_4ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
-	m_5ElemResultQueue.Resize(RESULT_QUEUE_SIZE);
+	m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
+	m_totoalResultQueue.Resize(1000);
 
 	m_hFinishEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }	
@@ -41,21 +41,23 @@ CAnalyzer::~CAnalyzer()
 	SAFE_RELEASEHANDLE(m_hFinishEvent);
 }
 
+void CAnalyzer::SetMainDlg(CCompositionAnalyzerDlg* pDlg)
+{
+	m_pMainDlg = pDlg;
+}
+
 void CAnalyzer::Clear()
 {
 	SAFE_RELEASEHANDLE(m_hAnalyzeThread);
-	SAFE_RELEASEHANDLE(m_hFinishEvent);
-	m_groupList.clear();
 	m_elementNameList.clear();
-	m_totoalResultQueue.Clear();
-	m_3ElemResultQueue.Clear();
-	m_4ElemResultQueue.Clear();
-	m_5ElemResultQueue.Clear();
+
 	m_ullDataCount = 0;
 	m_lfHighScore = 0;
 	m_lfMinScore = 0;
 	m_bRunning = false;
 	m_bDataInitialized = false;
+	m_bContiue = true;
+	ResetEvent(m_hFinishEvent);
 }
 
 void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
@@ -192,25 +194,42 @@ void CAnalyzer::AnalyzeAll()
 	m_lfHighScore = 0;
 
 	CCombination combination;
-	for (int i = 2; i <= 4; i++)
+	for (int i = 3; i <= 5; i++)
 	{
-		combination.Calculate(m_elementNameList.size() -1, i);
+		m_displayResultQueue.Clear();
+		m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
+		combination.Calculate(m_elementNameList.size(), i);
 
 		combList selectionList = combination.GetResultsList();
 		for (auto& selection : selectionList)
 		{
-			selection.push_back(ELEMENTCOUNT - 1);
-			m_ullDataCount += CSpliter::Calculate(i+1, 1000, this, selection.data());
+			//selection.push_back(ELEMENTCOUNT - 1);
+			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
+			if (!m_bContiue)
+			{
+				break;
+			}
 		}
+
+		if (!m_bContiue)
+		{
+			break;
+		}
+
+		m_pMainDlg->DisplayResult(i, m_displayResultQueue);
 	}
-
-	LogResults();
-
+	
+	if (m_bContiue)
+	{
+		LogTotalResults();
+		m_pMainDlg->AnalyzeDone();
+	}
+	
 	SetEvent(m_hFinishEvent);
 	m_bRunning = false;
 }
 
-void CAnalyzer::LogResults()
+void CAnalyzer::LogTotalResults()
 {
 
 }
@@ -238,26 +257,11 @@ void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const
 
 	if (lfTotalScore > m_lfMinScore)
 	{
-		switch (nElemCount)
-		{
-		case ELEMNT_COUNT3:
-			m_3ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
-			break;
-		case ELEMNT_COUNT4:
-			m_4ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
-			break;
-		case ELEMNT_COUNT5:
-			m_5ElemResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
-			break;
-		default:
-			break;
-		}
+		m_displayResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
 		if (lfTotalScore > m_lfHighScore)
 		{
-			m_lfHighScore = lfTotalScore;
+			m_lfHighScore = lfTotalScore;		
 		}
-
-		m_totoalResultQueue.PushResult(lfTotalScore, nElemCount, pUlContentIndexList, pUlRatioList);
 	}
 }
 
