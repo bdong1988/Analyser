@@ -5,6 +5,7 @@
 #include "spliter.h"
 #include "CSVProcessor.h"
 #include "CompositionAnalyzerDlg.h"
+#include "ExcelProcessor.h"
 
 #define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
 
@@ -13,6 +14,7 @@ static const wstring RANGE = L"range";
 static const wstring AVERAGE = L"average";
 
 #define RESULT_QUEUE_SIZE 5
+#define RESULT_LOG_COUNT 1000
 enum
 {
 	ELEMNT_COUNT3 = 3,
@@ -29,7 +31,7 @@ CAnalyzer::CAnalyzer()
 	}
 
 	m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
-	m_totoalResultQueue.Resize(1000);
+	m_totoalResultQueue.Resize(RESULT_LOG_COUNT);
 
 	m_hFinishEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }	
@@ -50,7 +52,12 @@ void CAnalyzer::Clear()
 {
 	SAFE_RELEASEHANDLE(m_hAnalyzeThread);
 	m_elementNameList.clear();
-
+	for (unsigned long i = 0; i < GROUPINFO.size(); i++)
+	{
+		m_groupList[i].ClearData();
+	}
+	m_totoalResultQueue.Clear();
+	m_totoalResultQueue.Resize(RESULT_LOG_COUNT);
 	m_ullDataCount = 0;
 	m_lfHighScore = 0;
 	m_lfMinScore = 0;
@@ -231,7 +238,12 @@ void CAnalyzer::AnalyzeAll()
 
 void CAnalyzer::LogTotalResults()
 {
-
+	CExcelProcessor excelProcessor;
+	HRESULT hr = excelProcessor.WriteLog(m_strLogFileName, m_totoalResultQueue, m_elementNameList);
+	if (FAILED(hr))
+	{
+		AfxMessageBox(L"保存结果文件发生错误");
+	}
 }
 
 double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
@@ -262,6 +274,7 @@ void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const
 		{
 			m_lfHighScore = lfTotalScore;		
 		}
+		m_totoalResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
 	}
 }
 
@@ -290,6 +303,12 @@ bool CAnalyzer::IsContinue(int nCurrentGroup, double lfScore)
 
 	return false;
 }
+
+void CAnalyzer::SetLogFileName(const wstring& strFileName)
+{
+	m_strLogFileName = strFileName;
+}
+
 
 DWORD WINAPI CAnalyzer::AnalyzeThreadProc(PVOID pParam)
 {

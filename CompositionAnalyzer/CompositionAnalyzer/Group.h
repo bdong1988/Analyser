@@ -27,6 +27,7 @@ public:
 	void SetTotalScore(double lfScore);
 	void AddCondition(const CConditionPtr& pConditon);
 	void SumConditionAverage();
+	void ClearData();
 	unsigned long GetSumD() { return m_ulSumD; }
 
 	double GetScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList);

@@ -35,6 +35,12 @@ void CGroup::SumConditionAverage()
 	}
 }
 
+void CGroup::ClearData()
+{
+	m_condtionList.clear();
+	m_ulSumD = 0;
+}
+
 double CGroup::GetScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
 	double lfSumE = 0;

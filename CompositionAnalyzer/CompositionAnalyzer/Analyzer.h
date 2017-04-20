@@ -48,10 +48,13 @@ public:
 
 	vector<wstring>& GetElementNameList() { return m_elementNameList; }
 
+	void SetLogFileName(const wstring& strFileName);
+
 	static DWORD WINAPI AnalyzeThreadProc(PVOID pParam);
 private:
 	CCompositionAnalyzerDlg* m_pMainDlg = nullptr;
 	HANDLE m_hAnalyzeThread = nullptr;
+	HANDLE m_hLogThread = nullptr;
 	HANDLE m_hFinishEvent = nullptr;
 	groupList m_groupList;
 
@@ -59,6 +62,7 @@ private:
 	CResultQueue m_totoalResultQueue;
 	CResultQueue m_displayResultQueue;
 
+	wstring m_strLogFileName;
 	unsigned long long m_ullDataCount = 0;
 	double		m_lfHighScore = 0;
 	double		m_lfMinScore = 0;

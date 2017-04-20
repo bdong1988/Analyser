@@ -63,9 +63,6 @@
     <ClInclude Include="CWorksheets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExcelReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
     <ClInclude Include="CApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ExcelProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CompositionAnalyzer.cpp">
@@ -104,13 +104,13 @@
     <ClCompile Include="Condition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ExcelReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Group.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ResultLogger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExcelProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

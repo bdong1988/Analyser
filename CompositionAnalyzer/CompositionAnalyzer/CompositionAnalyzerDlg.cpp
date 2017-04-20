@@ -1,4 +1,4 @@
-
+Ôªø
 // CompositionAnalyzerDlg.cpp : implementation file
 //
 
@@ -6,20 +6,20 @@
 #include "CompositionAnalyzer.h"
 #include "CompositionAnalyzerDlg.h"
 #include "afxdialogex.h"
-#include "ExcelReader.h"
+#include "ExcelProcessor.h"
 
 #define TIMER_PORGRESS 1
 #define TIMER_PROGRESS_ELAPS 200
 #define PROGRESS_RANGE 100
 
-#define SCORE_LIST_HEADER L"µ√∑÷"
+#define SCORE_LIST_HEADER L"ÂæóÂàÜ"
 
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-const LPWSTR FILEFILTER = _T("Excel(*.xlsx)|*.xlsx|Excel(*.xls)|*.xls|All Files(*.*)|*.*||");
+const LPWSTR FILEFILTER = _T("Excel(*.xlsx)|*.xlsx|Excel(*.xls)|*.xls||");
 
 // CAboutDlg dialog used for App About
 
@@ -125,6 +125,9 @@ BOOL CCompositionAnalyzerDlg::OnInitDialog()
 
 	m_progressAnalyze.SetRange(0, PROGRESS_RANGE);
 	m_edtiMinScore.SetWindowText(L"83");
+	m_list3Element.SetExtendedStyle(m_list3Element.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+	m_list4Element.SetExtendedStyle(m_list3Element.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+	m_list5Element.SetExtendedStyle(m_list3Element.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 	// TODO: Add extra initialization here
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -211,7 +214,7 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 
 	if (strSourceFilePath.IsEmpty())
 	{
-		AfxMessageBox(L"«Îµ˜»Î≥…∑÷Œƒº˛°£");
+		AfxMessageBox(L"ËØ∑Ë∞ÉÂÖ•ÊàêÂàÜÊñá‰ª∂„ÄÇ");
 		return;
 	}
 
@@ -220,24 +223,31 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 
 	if (strDestFilePath.IsEmpty())
 	{
-		AfxMessageBox(L"«Î—°‘Ò±£¥ÊΩ·π˚Œƒº˛°£");
+		AfxMessageBox(L"ËØ∑ÈÄâÊã©‰øùÂ≠òÁªìÊûúÊñá‰ª∂„ÄÇ");
 		return;
 	}
+
+	m_compositionAnalyzer.SetLogFileName(strDestFilePath.GetBuffer());
 
 	CString strMinScore;
 	m_edtiMinScore.GetWindowText(strMinScore);
 	if (strMinScore.IsEmpty())
 	{
-		AfxMessageBox(L"«Î…Ë÷√◊ÓµÕ∆¿∑÷°£");
+		AfxMessageBox(L"ËØ∑ËÆæÁΩÆÊúÄ‰ΩéËØÑÂàÜ„ÄÇ");
 		return;
 	}
 
 	double lfMinScore = _wtof(strMinScore);
 
-	CExcelReader reader;
-	HRESULT hr = reader.ReadFile(strSourceFilePath.GetBuffer());
+	CExcelProcessor excelProcessor;
+	HRESULT hr = excelProcessor.ReadFile(strSourceFilePath.GetBuffer());
+	if (FAILED(hr))
+	{
+		AfxMessageBox(L"‰∏çËÉΩËØªÂèñËæìÂÖ•Êñá‰ª∂");
+	}
+
 	m_compositionAnalyzer.Clear();
-	m_compositionAnalyzer.InitilizeData(reader.GetRawContents());
+	m_compositionAnalyzer.InitilizeData(excelProcessor.GetRawContents());
 
 	InitListControl(m_list3Element, m_compositionAnalyzer.GetElementNameList());
 	InitListControl(m_list4Element, m_compositionAnalyzer.GetElementNameList());
@@ -246,12 +256,7 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 	m_compositionAnalyzer.SetMinScore(lfMinScore);
 	m_compositionAnalyzer.StartAnalyze();
 
-	m_editSourceFilePath.EnableWindow(FALSE);
-	m_editDestFilePath.EnableWindow(FALSE);
-	m_edtiMinScore.EnableWindow(FALSE);
-	m_btnAnalyze.EnableWindow(FALSE);
-	m_btnChooseSourceFile.EnableWindow(FALSE);
-	m_btnChosseDestFile.EnableWindow(FALSE);
+	EnableControl(FALSE);
 
 	SetTimer(TIMER_PORGRESS, TIMER_PROGRESS_ELAPS, nullptr);
 }
@@ -311,10 +316,23 @@ void CCompositionAnalyzerDlg::AnalyzeDone()
 {
 	m_progressAnalyze.SetPos(PROGRESS_RANGE);
 	KillTimer(TIMER_PORGRESS);
+	EnableControl(TRUE);
+}
+
+void CCompositionAnalyzerDlg::EnableControl(BOOL bEnable)
+{
+	m_editSourceFilePath.EnableWindow(bEnable);
+	m_editDestFilePath.EnableWindow(bEnable);
+	m_edtiMinScore.EnableWindow(bEnable);
+	m_btnAnalyze.EnableWindow(bEnable);
+	m_btnChooseSourceFile.EnableWindow(bEnable);
+	m_btnChosseDestFile.EnableWindow(bEnable);
 }
 
 void CCompositionAnalyzerDlg::InitListControl(CListCtrl & rListControl, vector<wstring>& rElmentList)
 {
+
+	rListControl.DeleteAllItems();
 	int nElementCount = rElmentList.size();
 
 	CRect rect;

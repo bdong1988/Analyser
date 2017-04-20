@@ -6,14 +6,16 @@
 #include "CWorkbooks.h"
 #include "CWorksheet.h"
 #include "CWorksheets.h"
+#include "Result.h"
 
-class CExcelReader
+class CExcelProcessor
 {
 public:
-	CExcelReader();
-	~CExcelReader();
+	CExcelProcessor();
+	~CExcelProcessor();
 
 	HRESULT ReadFile(const wstring& strFile);
+	HRESULT WriteLog(const wstring& strFile, CResultQueue& resultQueue, vector<wstring>& elementList);
 	contentArray& GetRawContents();
 private:
 	CApplication m_excelApplication;

@@ -1,8 +1,5 @@
 #pragma once
 
-
-#include "CritlSec.h"
-
 #define BUFFER_SIZE 1024
 #define QUEUE_SIZE 1000
 
@@ -124,7 +121,6 @@ public:
 
 		std::sort(m_resultQueue.begin(), m_resultQueue.end());
 	}
-
 	void Clear()
 	{
 		m_resultQueue.clear();
@@ -133,6 +129,11 @@ public:
 	vector<CResult>& GetResults()
 	{
 		return m_resultQueue;
+	}
+
+	unsigned long GetCurrent()
+	{
+		return m_nCurrentIndex;
 	}
 
 	vector<CResult> m_resultQueue;

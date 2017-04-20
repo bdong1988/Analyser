@@ -26,9 +26,7 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
-	
 
-	
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -43,6 +41,7 @@ public:
 
 	void DisplayResult(int nElemCount, CResultQueue& rResultQueue);
 	void AnalyzeDone();
+	void EnableControl(BOOL bEnable);
 
 	CEdit m_editSourceFilePath;
 	CEdit m_editDestFilePath;
