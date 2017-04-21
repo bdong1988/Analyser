@@ -1,4 +1,6 @@
 #pragma once
+#include "AnalyzerException.h"
+
 class CUtility
 {
 public:

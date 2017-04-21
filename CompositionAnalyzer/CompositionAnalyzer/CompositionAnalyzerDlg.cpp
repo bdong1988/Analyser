@@ -244,10 +244,15 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 	if (FAILED(hr))
 	{
 		AfxMessageBox(L"不能读取输入文件");
+		return;
 	}
 
 	m_compositionAnalyzer.Clear();
-	m_compositionAnalyzer.InitilizeData(excelProcessor.GetRawContents());
+	if (!m_compositionAnalyzer.InitilizeData(excelProcessor.GetRawContents()))
+	{
+		AfxMessageBox(L"输入数据格式有误, 不能解析数据");
+		return;
+	}
 
 	InitListControl(m_list3Element, m_compositionAnalyzer.GetElementNameList());
 	InitListControl(m_list4Element, m_compositionAnalyzer.GetElementNameList());

@@ -187,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analyzer.h" />
+    <ClInclude Include="AnalyzerException.h" />
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="Combination.h" />
     <ClInclude Include="CompositionAnalyzer.h" />

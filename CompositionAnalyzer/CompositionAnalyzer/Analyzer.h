@@ -5,9 +5,12 @@
 
 #define ELEMENTCOUNT 8
 
+
+
 using groupList = vector<CGroup>;
 
 class CCompositionAnalyzerDlg;
+
 class CAnalyzer
 {
 
@@ -19,7 +22,7 @@ public:
 
 	void Clear();
 
-	void InitilizeData(const contentArray& rawDataArray);
+	BOOL InitilizeData(const contentArray& rawDataArray);
 
 	void ParseRange(const wstring& strRange, unsigned long& ulLow, unsigned long& ulHigh);
 

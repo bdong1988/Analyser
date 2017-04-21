@@ -20,7 +20,7 @@ HRESULT CExcelProcessor::ReadFile(const wstring& strFile)
 			return E_FAIL;
 		}
 
-		m_excelApplication.put_Visible(TRUE);
+		m_excelApplication.put_Visible(FALSE);
 		m_excelWorkBooks.AttachDispatch(m_excelApplication.get_Workbooks(), TRUE);
 
 		COleVariant vaTrue((short)TRUE);
@@ -156,6 +156,7 @@ HRESULT CExcelProcessor::WriteLog(const wstring& strFile, CResultQueue& resultQu
 			_variant_t(vtMissing),
 			_variant_t(vtMissing),
 			_variant_t(vtMissing));
+		m_excelWorkBook.Close(vaOptional, COleVariant(strFile.c_str()), vaOptional);
 		m_excelWorkBooks.Close();
 
 		m_currentRange.ReleaseDispatch();

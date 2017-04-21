@@ -6,6 +6,7 @@
 #include "CSVProcessor.h"
 #include "CompositionAnalyzerDlg.h"
 #include "ExcelProcessor.h"
+#include "AnalyzerException.h"
 
 #define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
 
@@ -67,101 +68,116 @@ void CAnalyzer::Clear()
 	ResetEvent(m_hFinishEvent);
 }
 
-void CAnalyzer::InitilizeData(const contentArray & rawDataArray)
+BOOL CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 {
-	unsigned long dwRowCount = rawDataArray.size();
-	for (unsigned long i = 0; i < dwRowCount; i++)
+	try
 	{
-		BOOL bAddCondition = FALSE;
-
-		CConditionPtr pCondition = std::make_shared<CCondition>();
-		unsigned long dwColCount = rawDataArray[i].size();
-
-		if (0 == i)
+		unsigned long dwRowCount = rawDataArray.size();
+		for (unsigned long i = 0; i < dwRowCount; i++)
 		{
-			for (unsigned long j = 0; j < dwColCount; j++)
-			{
-				if (rawDataArray[i][j].empty())
-				{
-					continue;
-				}
+			BOOL bAddCondition = FALSE;
 
-				if (rawDataArray[0][j] != CONDITION && rawDataArray[0][j] != RANGE && rawDataArray[0][j] != AVERAGE)
-				{
-					wstring strName = rawDataArray[i][j];
-					m_elementNameList.push_back(strName);
-				}
-			}
-		}
-		else
-		{
-			for (unsigned long j = 0; j < dwColCount; j++)
-			{
-				if (rawDataArray[i][j].empty())
-				{
-					continue;
-				}
-				if (0 != i)
-				{
-					bAddCondition = TRUE;
-				}
+			CConditionPtr pCondition = std::make_shared<CCondition>();
+			unsigned long dwColCount = rawDataArray[i].size();
 
-				int nElementIndex = 0;
-				if (rawDataArray[0][j] == CONDITION)
+			if (0 == i)
+			{
+				for (unsigned long j = 0; j < dwColCount; j++)
 				{
-					pCondition->SetName(rawDataArray[i][j]);
-				}
-				else if (rawDataArray[0][j] == RANGE)
-				{
-					unsigned long dwLow = 0, dwHigh = 0;
-					ParseRange(rawDataArray[i][j], dwLow, dwHigh);
-					pCondition->SetRange(dwLow, dwHigh);
-				}
-				else if (rawDataArray[0][j] == AVERAGE)
-				{
-					unsigned long dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
-					pCondition->SetAverage(dwAverage);
-				}
-				else if (!rawDataArray[0][j].empty())
-				{
-					unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
-					bool bFixed = false;
-					if (j == ELEMENTCOUNT -1)
+					if (rawDataArray[i][j].empty())
 					{
-						bFixed = true;
+						continue;
 					}
-					pCondition->AddContent(nElementIndex, dwContent, bFixed);
-					nElementIndex++;
+
+					if (rawDataArray[0][j] != CONDITION && rawDataArray[0][j] != RANGE && rawDataArray[0][j] != AVERAGE)
+					{
+						wstring strName = rawDataArray[i][j];
+						m_elementNameList.push_back(strName);
+					}
 				}
-			}
-		}
-		
-		if (bAddCondition)
-		{
-			if (i <= 18)
-			{
-				m_groupList[0].AddCondition(pCondition);
-			}
-			else if (i > 18 && i <= 31)
-			{
-				m_groupList[1].AddCondition(pCondition);
-			}
-			else if (i > 31 && i <= 34)
-			{
-				m_groupList[2].AddCondition(pCondition);
+
+				if (m_elementNameList.size() != ELEMENTCOUNT)
+				{
+					return FALSE;
+				}
 			}
 			else
 			{
-				m_groupList[3].AddCondition(pCondition);
+				for (unsigned long j = 0; j < dwColCount; j++)
+				{
+					if (rawDataArray[i][j].empty())
+					{
+						continue;
+					}
+					if (0 != i)
+					{
+						bAddCondition = TRUE;
+					}
+
+					int nElementIndex = 0;
+					if (rawDataArray[0][j] == CONDITION)
+					{
+						pCondition->SetName(rawDataArray[i][j]);
+					}
+					else if (rawDataArray[0][j] == RANGE)
+					{
+						unsigned long dwLow = 0, dwHigh = 0;
+						ParseRange(rawDataArray[i][j], dwLow, dwHigh);
+						pCondition->SetRange(dwLow, dwHigh);
+					}
+					else if (rawDataArray[0][j] == AVERAGE)
+					{
+						unsigned long dwAverage = CUtility::GetNumFromString(rawDataArray[i][j]);
+						pCondition->SetAverage(dwAverage);
+					}
+					else if (!rawDataArray[0][j].empty())
+					{
+						unsigned long dwContent = CUtility::GetNumFromString(rawDataArray[i][j]);
+						bool bFixed = false;
+						if (j == ELEMENTCOUNT - 1)
+						{
+							bFixed = true;
+						}
+						pCondition->AddContent(nElementIndex, dwContent, bFixed);
+						nElementIndex++;
+					}
+				}
 			}
+
+			if (bAddCondition)
+			{
+				if (i <= 18)
+				{
+					m_groupList[0].AddCondition(pCondition);
+				}
+				else if (i > 18 && i <= 31)
+				{
+					m_groupList[1].AddCondition(pCondition);
+				}
+				else if (i > 31 && i <= 34)
+				{
+					m_groupList[2].AddCondition(pCondition);
+				}
+				else
+				{
+					m_groupList[3].AddCondition(pCondition);
+				}
+			}
+
 		}
 
+		for (auto& group : m_groupList)
+		{
+			group.SumConditionAverage();
+		}
+	}
+	catch (const std::exception& ex)
+	{
+		return FALSE;
 	}
 
-	for (auto& group : m_groupList)
-	{
-		group.SumConditionAverage();
-	}
+	return TRUE;
+
 }
 
 void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsigned long & ulHigh)
@@ -172,6 +188,10 @@ void CAnalyzer::ParseRange(const wstring& strRange, unsigned long & ulLow, unsig
 	{
 		ulLow = CUtility::GetNumFromString(matchResult[1].str());
 		ulHigh = CUtility::GetNumFromString(matchResult[2].str());
+	}
+	else
+	{
+		throw CAnalyzeException("Element Range has the incorrect format");
 	}
 }
 
@@ -201,16 +221,16 @@ void CAnalyzer::AnalyzeAll()
 	m_lfHighScore = 0;
 
 	CCombination combination;
-	for (int i = 3; i <= 5; i++)
+	for (int i = 5; i <= 5; i++)
 	{
 		m_displayResultQueue.Clear();
 		m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
-		combination.Calculate(m_elementNameList.size(), i);
+		combination.Calculate(m_elementNameList.size()-1, i-1);
 
 		combList selectionList = combination.GetResultsList();
 		for (auto& selection : selectionList)
 		{
-			//selection.push_back(ELEMENTCOUNT - 1);
+			selection.push_back(ELEMENTCOUNT - 1);
 			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
 			if (!m_bContiue)
 			{
@@ -221,6 +241,23 @@ void CAnalyzer::AnalyzeAll()
 		if (!m_bContiue)
 		{
 			break;
+		}
+
+		if (i == 5)
+		{
+			for (int j = 0; j < 5; j++)
+			{
+				unsigned long indexList[5] = { 0 };
+				unsigned long ratioList[5] = { 0 };
+				auto elemntList = m_displayResultQueue.m_resultQueue[j].m_listElements;
+				for (int k = 0; k < elemntList.size(); k++)
+				{
+					indexList[k] = elemntList[k].m_nElemIndex;
+					ratioList[k] = elemntList[k].m_ulRatio;
+				}
+				m_ullDataCount += CSpliter::CalcuateHighPresicion5(1000, this, indexList, ratioList);
+			}
+
 		}
 
 		m_pMainDlg->DisplayResult(i, m_displayResultQueue);
@@ -239,7 +276,7 @@ void CAnalyzer::AnalyzeAll()
 void CAnalyzer::LogTotalResults()
 {
 	CExcelProcessor excelProcessor;
-	HRESULT hr = excelProcessor.WriteLog(m_strLogFileName, m_totoalResultQueue, m_elementNameList);
+ 	HRESULT hr = excelProcessor.WriteLog(m_strLogFileName, m_totoalResultQueue, m_elementNameList);
 	if (FAILED(hr))
 	{
 		AfxMessageBox(L"保存结果文件发生错误");

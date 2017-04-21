@@ -107,5 +107,43 @@ public:
 
 		return ulCount;
 	}
+
+	static unsigned long CalcuateHighPresicion5(unsigned long ulMax, CAnalyzer* pAnalyzer, const unsigned long* pUlContentIndexList, const unsigned long* pUlRatioList)
+	{
+		unsigned long ulCount = 0;
+		unsigned long ratioList[5] = { 0 };
+		unsigned long ulRatioI = pUlRatioList[0];
+		unsigned long ulRatioJ = pUlRatioList[1];
+		unsigned long ulRatioK = pUlRatioList[2];
+		unsigned long ulRatioL = pUlRatioList[3];
+		unsigned long ulRatioM = pUlRatioList[4];
+		for (unsigned long i = ulRatioI - 10; i <= ulRatioI + 10; i ++)
+		{
+			ratioList[0] = i;
+			for (unsigned long j = ulRatioJ - 10; j <= ulRatioJ + 10; j++)
+			{
+				ratioList[1] = j;
+				for (unsigned long k = ulRatioK - 10; k <= ulRatioK + 10; k++)
+				{
+					ratioList[2] = k;
+					for (unsigned long l = ulRatioL - 10; l <= ulRatioL + 10; l++)
+					{
+						ratioList[3] = l;
+						ratioList[4] = ulMax - i - j - k - l;
+						if (ratioList[4] < ulRatioM - 10 || ratioList[4] > ulRatioM + 10)
+						{
+							continue;
+						}
+
+						pAnalyzer->Analyze(5, ratioList, pUlContentIndexList);
+						ulCount++;
+					}
+
+				}
+			}
+		}
+
+		return ulCount;
+	}
 };
 
