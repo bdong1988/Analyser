@@ -221,7 +221,7 @@ void CAnalyzer::AnalyzeAll()
 	m_lfHighScore = 0;
 
 	CCombination combination;
-	for (int i = 5; i <= 5; i++)
+	for (int i = 3; i <= 5; i++)
 	{
 		m_displayResultQueue.Clear();
 		m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
