@@ -84,6 +84,42 @@ public:
 		return m_lfScore > rfValue.m_lfScore;
 	}
 
+	wstring CovertToLogRow8Elem()
+	{
+		
+		double lfRatio[8] = { 0 };
+		wchar_t buff[BUFFER_SIZE] = { 0 };
+		for (const auto& elem : m_listElements)
+		{
+			lfRatio[elem.m_nElemIndex] = (double)elem.m_ulRatio / 1000;
+		}
+
+		StringCbPrintf(buff, BUFFER_SIZE * sizeof(wchar_t), L"%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf",
+			m_lfScore, lfRatio[0], lfRatio[1], lfRatio[2], lfRatio[3], lfRatio[4], lfRatio[5], lfRatio[6], lfRatio[7]);
+
+		wstring strRow(buff);
+
+		return strRow;
+	}
+
+	wstring CovertToLogRow7Elem()
+	{
+
+		double lfRatio[7] = { 0 };
+		wchar_t buff[BUFFER_SIZE] = { 0 };
+		for (const auto& elem : m_listElements)
+		{
+			lfRatio[elem.m_nElemIndex] = (double)elem.m_ulRatio / 1000;
+		}
+
+		StringCbPrintf(buff, BUFFER_SIZE * sizeof(wchar_t), L"%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf,%.3lf",
+			m_lfScore, lfRatio[0], lfRatio[1], lfRatio[2], lfRatio[3], lfRatio[4], lfRatio[5], lfRatio[6]);
+
+		wstring strRow(buff);
+
+		return strRow;
+	}
+
 	double m_lfScore = 0;
 	elemntList m_listElements;
 };
@@ -124,6 +160,7 @@ public:
 	void Clear()
 	{
 		m_resultQueue.clear();
+		m_nCurrentIndex = 0;
 	}
 
 	vector<CResult>& GetResults()

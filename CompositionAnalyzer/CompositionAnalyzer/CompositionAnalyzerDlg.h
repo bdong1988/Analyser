@@ -42,6 +42,7 @@ public:
 	void DisplayResult(int nElemCount, CResultQueue& rResultQueue);
 	void AnalyzeDone();
 	void EnableControl(BOOL bEnable);
+	void SetCurrentCount(unsigned long long ullCount);
 
 	CEdit m_editSourceFilePath;
 	CEdit m_editDestFilePath;
@@ -64,4 +65,5 @@ private:
 public:
 
 	afx_msg void OnClose();
+	CStatic m_staticCount;
 };

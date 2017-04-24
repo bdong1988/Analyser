@@ -4,33 +4,21 @@
 #include "stdafx.h"
 #include "Result.h"
 #include <stdlib.h>
+#include <string>
+#include <locale>
+#include <codecvt>
+#include "../CompositionAnalyzer/CSVProcessor.h"
+#include "../CompositionAnalyzer/Utility.h"
 
-CResultQueue queue;
 
-void AssertQueue()
-{
-	for (size_t i = 0; i < queue.m_nCurrentIndex - 1; i++)
-	{
-		if (queue.m_resultQueue[i] < queue.m_resultQueue[i + 1])
-		{
-			_ASSERT(0);
-		}
-	}
-}
 int main()
 {
-	int nMax = 0;
-	for (size_t i = 0; i < 40000; i++)
-	{
-		int n = rand();
-		if (n > nMax)
-		{
-			nMax = n;
-		}
-		queue.PushResult(n);
-	}
-
-	AssertQueue();
+	unsigned long dwContent = CUtility::GetNumFromString(L"123");
+	dwContent = CUtility::GetNumFromString(L"12344");
+	dwContent = CUtility::GetNumFromString(L"123.1");
+	dwContent = CUtility::GetNumFromString(L"123.20");
+	dwContent = CUtility::GetNumFromString(L"123.234");
+	dwContent = CUtility::GetNumFromString(L"123.234456");
     return 0;
 }
 

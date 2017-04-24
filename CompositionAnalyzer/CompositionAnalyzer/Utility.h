@@ -18,7 +18,7 @@ public:
 		int nIndex = str.find(L'.');
 		if (nIndex < 0)
 		{
-			return _wtol(str.c_str());
+			return _wtol(str.c_str())*1000;
 		}
 		
 		int nLength = str.length();
@@ -39,6 +39,10 @@ public:
 			break;
 		default:
 			break;
+		}
+		if (nLength - nIndex > 2)
+		{
+			strDecimal = strDecimal.substr(0, 3);
 		}
 
 		wstring strNew = strInteger + strDecimal + strAddional;

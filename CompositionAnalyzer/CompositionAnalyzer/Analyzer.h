@@ -38,8 +38,6 @@ public:
 
 	void SetMinScore(double lfMinScore);
 
-	void AddDataCount(unsigned long long ullDataCount);
-
 	unsigned long long GetDataCount() { return m_ullDataCount; }
 	double	GetHighScore() { return m_lfHighScore; }
 
@@ -47,11 +45,13 @@ public:
 
 	HANDLE GetFinishedEvent() { return m_hFinishEvent; }
 	bool IsRunning() { return m_bRunning; }
-	void CancelAnalyze() { m_bContiue = false; }
+	void CancelAnalyze() { m_bContiue = false; TerminateThread(m_hAnalyzeThread, 0); }
 
 	vector<wstring>& GetElementNameList() { return m_elementNameList; }
 
 	void SetLogFileName(const wstring& strFileName);
+
+	wstring GenerateLogHeader();
 
 	static DWORD WINAPI AnalyzeThreadProc(PVOID pParam);
 private:

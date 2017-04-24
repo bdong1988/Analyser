@@ -26,9 +26,12 @@
 #define IDC_STATIC_ELEMENT_VALUE        1016
 #define IDC_STATIC_MIX_VALUE            1017
 #define IDC_BTN_ANALYZE                 1018
+#define IDC_STATIC_CURRENTCOUNT         1019
 #define IDC_GROUP_3                     1020
 #define IDC_GROUP_4                     1021
 #define IDC_GROUP_5                     1022
+#define IDC_STATIC_CURRENTCOUNT2        1023
+#define IDC_STATIC_CURRENTCOUNT_VALUE   1023
 #define IDC_LIST_3ELEMENT               1024
 #define IDC_LIST_4ELEMENT               1025
 #define IDC_LIST_5ELEMENT               1026

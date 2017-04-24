@@ -7,6 +7,8 @@
 #include "CompositionAnalyzerDlg.h"
 #include "ExcelProcessor.h"
 #include "AnalyzerException.h"
+#include <locale>
+#include <codecvt>
 
 #define SAFE_RELEASEHANDLE(p) if(p){CloseHandle(p); p = nullptr;}
 
@@ -96,7 +98,7 @@ BOOL CAnalyzer::InitilizeData(const contentArray & rawDataArray)
 					}
 				}
 
-				if (m_elementNameList.size() != ELEMENTCOUNT)
+				if (m_elementNameList.size() != ELEMENTCOUNT && m_elementNameList.size() != ELEMENTCOUNT - 1)
 				{
 					return FALSE;
 				}
@@ -219,19 +221,32 @@ void CAnalyzer::AnalyzeAll()
 
 	m_ullDataCount = 0;
 	m_lfHighScore = 0;
-
 	CCombination combination;
+	int nCount = m_elementNameList.size();
+	int nMin = 0;
+	int nMax = 0;
 	for (int i = 3; i <= 5; i++)
 	{
 		m_displayResultQueue.Clear();
 		m_displayResultQueue.Resize(RESULT_QUEUE_SIZE);
-		combination.Calculate(m_elementNameList.size()-1, i-1);
+		if (nCount == ELEMENTCOUNT)
+		{
+			combination.Calculate(m_elementNameList.size() - 1, i - 1);
+		}
+		else
+		{
+			combination.Calculate(m_elementNameList.size(), i);
+		}
+		
 
 		combList selectionList = combination.GetResultsList();
 		for (auto& selection : selectionList)
 		{
-			selection.push_back(ELEMENTCOUNT - 1);
-			m_ullDataCount += CSpliter::Calculate(i, 1000, this, selection.data());
+			if (nCount == ELEMENTCOUNT)
+			{
+				selection.push_back(ELEMENTCOUNT - 1);
+			}		
+			CSpliter::Calculate(i, 1000, this, selection.data());
 			if (!m_bContiue)
 			{
 				break;
@@ -255,7 +270,7 @@ void CAnalyzer::AnalyzeAll()
 					indexList[k] = elemntList[k].m_nElemIndex;
 					ratioList[k] = elemntList[k].m_ulRatio;
 				}
-				m_ullDataCount += CSpliter::CalcuateHighPresicion5(1000, this, indexList, ratioList);
+				CSpliter::CalcuateHighPresicion5(1000, this, indexList, ratioList);
 			}
 
 		}
@@ -275,12 +290,41 @@ void CAnalyzer::AnalyzeAll()
 
 void CAnalyzer::LogTotalResults()
 {
-	CExcelProcessor excelProcessor;
- 	HRESULT hr = excelProcessor.WriteLog(m_strLogFileName, m_totoalResultQueue, m_elementNameList);
-	if (FAILED(hr))
+	CCSVProcessor csvProcessor;
+	if (!csvProcessor.OpenCSV(m_strLogFileName.c_str()))
 	{
-		AfxMessageBox(L"保存结果文件发生错误");
+		AfxMessageBox(L"保存结果失败， 请检查保存结果文件名是否合法。");
+		return;
 	}
+	csvProcessor.Write(GenerateLogHeader());
+	
+	int nLogCount = m_totoalResultQueue.GetCurrent();
+	BOOL b8Elem = TRUE;
+	if (m_elementNameList.size() == 8)
+	{
+		b8Elem = TRUE;
+	}
+	else
+	{
+		b8Elem = FALSE;
+	}
+
+	wstring strRow;
+	for (int i = 0; i < nLogCount; i++)
+	{
+		if (b8Elem)
+		{
+			strRow = m_totoalResultQueue.m_resultQueue[i].CovertToLogRow8Elem();
+		}
+		else
+		{
+			strRow = m_totoalResultQueue.m_resultQueue[i].CovertToLogRow7Elem();
+		}
+		csvProcessor.Write(strRow);
+	}
+	
+	csvProcessor.CloseCSV();
+
 }
 
 double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
@@ -303,7 +347,7 @@ double CAnalyzer::GetTotalScore(int nElemCount, const unsigned long* pUlRatioLis
 void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const unsigned long* pUlContentIndexList)
 {
 	double lfTotalScore = GetTotalScore(nElemCount, pUlRatioList, pUlContentIndexList);
-
+	m_ullDataCount++;
 	if (lfTotalScore > m_lfMinScore)
 	{
 		m_displayResultQueue.PushResult(lfTotalScore, nElemCount, pUlRatioList, pUlContentIndexList);
@@ -318,11 +362,6 @@ void CAnalyzer::Analyze(int nElemCount, const unsigned long* pUlRatioList, const
 void CAnalyzer::SetMinScore(double lfMinScore)
 {
 	m_lfMinScore = lfMinScore;
-}
-
-void CAnalyzer::AddDataCount(unsigned long long ullDataCount)
-{
-	m_ullDataCount += ullDataCount;
 }
 
 bool CAnalyzer::IsContinue(int nCurrentGroup, double lfScore)
@@ -346,6 +385,17 @@ void CAnalyzer::SetLogFileName(const wstring& strFileName)
 	m_strLogFileName = strFileName;
 }
 
+wstring CAnalyzer::GenerateLogHeader()
+{
+	wstring strLogHeader(L"得分,");
+	for (const auto& elem : m_elementNameList)
+	{
+		strLogHeader += elem;
+		strLogHeader += L',';
+	}
+
+	return strLogHeader;
+}
 
 DWORD WINAPI CAnalyzer::AnalyzeThreadProc(PVOID pParam)
 {

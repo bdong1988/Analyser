@@ -45,27 +45,6 @@ public:
 
 		std::sort(m_resultQueue.begin(), m_resultQueue.end(), [](double a, double b) {return a > b; });
 	}
-
-	void PushResult2(double lfScore)
-	{
-		int nIndex = -1;
-		if (m_nCurrentIndex < m_nMaxIndex)
-		{
-			nIndex = m_nCurrentIndex++;
-		}
-		else if(m_nCurrentIndex == m_nMaxIndex)
-		{
-			nIndex == m_nCurrentIndex;
-		}
-
-		int nInsertIndex = FindSortIndex(lfScore, 0, nIndex);
-		m_resultQueue[nIndex] = lfScore;
-		if (nInsertIndex != nIndex)
-		{
-			std::sort(m_resultQueue.begin() + nInsertIndex, m_resultQueue.end(), [](double a, double b) {return a > b; });
-		}
-	}
-
 	int FindSortIndex(double lfScore, int nBeginIndex, int nEndIndex)
 	{
 		int nMidIndex = (nEndIndex - nBeginIndex) / 2;
@@ -110,13 +89,9 @@ public:
 		}
 	}
 
-	int FindIndex(double lfScore)
-	{
-
-	}
-
 	void Clear()
 	{
+		m_nCurrentIndex = 0;
 		m_resultQueue.clear();
 	}
 

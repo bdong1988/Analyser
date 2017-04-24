@@ -9,7 +9,7 @@
 #include "ExcelProcessor.h"
 
 #define TIMER_PORGRESS 1
-#define TIMER_PROGRESS_ELAPS 200
+#define TIMER_PROGRESS_ELAPS 50
 #define PROGRESS_RANGE 100
 
 #define SCORE_LIST_HEADER L"得分"
@@ -20,6 +20,7 @@
 #endif
 
 const LPWSTR FILEFILTER = _T("Excel(*.xlsx)|*.xlsx|Excel(*.xls)|*.xls||");
+const LPWSTR DESTFILTER = _T("CSV(*.csv)|*.csv||");
 
 // CAboutDlg dialog used for App About
 
@@ -78,6 +79,7 @@ void CCompositionAnalyzerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BTN_ANALYZE, m_btnAnalyze);
 	DDX_Control(pDX, IDC_BTN_OPEN_SOURCE_FILE, m_btnChooseSourceFile);
 	DDX_Control(pDX, IDC_BTN_OPEN_DEST_FILE, m_btnChosseDestFile);
+	DDX_Control(pDX, IDC_STATIC_CURRENTCOUNT_VALUE, m_staticCount);
 }
 
 BEGIN_MESSAGE_MAP(CCompositionAnalyzerDlg, CDialogEx)
@@ -196,7 +198,7 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnOpenSourceFile()
 
 void CCompositionAnalyzerDlg::OnBnClickedBtnOpenDestFile()
 {
-	CFileDialog fileDlg(TRUE, _T(".xlsx"), nullptr, 0, FILEFILTER, this);
+	CFileDialog fileDlg(TRUE, _T(".csv"), nullptr, 0, DESTFILTER, this);
 	CString strFilePath;
 
 	if (IDOK == fileDlg.DoModal())
@@ -225,6 +227,11 @@ void CCompositionAnalyzerDlg::OnBnClickedBtnAnalyze()
 	{
 		AfxMessageBox(L"请选择保存结果文件。");
 		return;
+	}
+
+	if (strDestFilePath.Find(L".csv") < 0)
+	{
+		strDestFilePath += L".csv";
 	}
 
 	m_compositionAnalyzer.SetLogFileName(strDestFilePath.GetBuffer());
@@ -275,6 +282,7 @@ void CCompositionAnalyzerDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			m_progressAnalyze.SetPos(m_nProgressPos++);
 			m_nProgressPos = m_nProgressPos % PROGRESS_RANGE;
+			SetCurrentCount(m_compositionAnalyzer.GetDataCount());
 		}
 	}
 	CDialogEx::OnTimer(nIDEvent);
@@ -302,7 +310,7 @@ void CCompositionAnalyzerDlg::DisplayResult(int nElemCount, CResultQueue& rResul
 	{
 		return;
 	}
-	for (int  i = 0; i < rResultQueue.m_resultQueue.size() -1; i++)
+	for (int  i = 0; i < rResultQueue.GetCurrent(); i++)
 	{
 		CString strScore;
 		strScore.Format(L"%lf", rResultQueue.m_resultQueue[i].m_lfScore);
@@ -334,17 +342,29 @@ void CCompositionAnalyzerDlg::EnableControl(BOOL bEnable)
 	m_btnChosseDestFile.EnableWindow(bEnable);
 }
 
+void CCompositionAnalyzerDlg::SetCurrentCount(unsigned long long ullCount)
+{
+	CString strCount;
+	strCount.Format(L"%llu", ullCount);
+	m_staticCount.SetWindowText(strCount);
+}
+
 void CCompositionAnalyzerDlg::InitListControl(CListCtrl & rListControl, vector<wstring>& rElmentList)
 {
-
 	rListControl.DeleteAllItems();
+	int nCount = rListControl.GetHeaderCtrl()->GetItemCount();
+	for (size_t i = 0; i < nCount; i++)
+	{
+		rListControl.DeleteColumn(0);
+	}
 	int nElementCount = rElmentList.size();
 
 	CRect rect;
 	rListControl.GetWindowRect(rect);
+	int nWidth = GetSystemMetrics(SM_CXVSCROLL);
 
-	int nColumnWidth = rect.Width() / (nElementCount + 1);
-	int nFirstColumnWidth = rect.Width() - nColumnWidth*nElementCount;
+	int nColumnWidth = (rect.Width()- nWidth) / (nElementCount + 1);
+	int nFirstColumnWidth = rect.Width() - nColumnWidth*nElementCount - 10;
 
 	LV_COLUMN lvcolumn = { 0 };
 	lvcolumn.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH | LVCF_ORDER;
@@ -374,7 +394,7 @@ void CCompositionAnalyzerDlg::OnClose()
 	if (m_compositionAnalyzer.IsRunning())
 	{
 		m_compositionAnalyzer.CancelAnalyze();
-		WaitForSingleObject(m_compositionAnalyzer.GetFinishedEvent(), INFINITE);
+		//WaitForSingleObject(m_compositionAnalyzer.GetFinishedEvent(), INFINITE);
 	}
 	CDialogEx::OnClose();
 }
